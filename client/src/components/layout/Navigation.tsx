@@ -11,8 +11,12 @@ export const Navigation = () => {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border"
+      style={{ marginBottom: 0, paddingBottom: 0, height: '72px', boxShadow: 'none' }}
     >
-  <nav className="container mx-auto px-4 h-16 flex items-center justify-between" style={{marginBottom: 0, paddingBottom: 0}}>
+      <nav
+        className="container mx-auto px-4 flex items-center justify-between"
+        style={{ height: '72px', marginBottom: 0, paddingBottom: 0, boxShadow: 'none', borderBottom: 'none' }}
+      >
         <Link to="/" className="font-bold text-xl">
           Expertene
         </Link>
@@ -29,11 +33,11 @@ export const Navigation = () => {
             </>
           ) : (
             <Button asChild size="sm">
-              <Link to="/feed">Go to Feed</Link>
+              <Link to="/profile">Profile</Link>
             </Button>
           )}
         </div>
       </nav>
     </motion.header>
   );
-};
+}

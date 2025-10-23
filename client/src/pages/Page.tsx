@@ -277,20 +277,20 @@ export default function Page() {
         supabase
           .from('likes')
           .select('id')
-          .eq('user_id', user!.id as string)
-          .eq('article_id', page.id)
+          .eq('user_id', user?.id ?? '')
+          .eq('article_id', page?.id ?? '')
           .single(),
         supabase
           .from('bookmarks')
           .select('id')
-          .eq('user_id', user!.id as string)
-          .eq('article_id', page.id)
+          .eq('user_id', user?.id ?? '')
+          .eq('article_id', page?.id ?? '')
           .single(),
         supabase
           .from('follows')
           .select('id')
-          .eq('follower_id', user!.id as string)
-          .eq('following_id', page.author_id)
+          .eq('follower_id', user?.id ?? '')
+          .eq('following_id', page?.author_id ?? '')
           .single(),
       ]);
 
@@ -310,15 +310,16 @@ export default function Page() {
         await supabase
           .from('likes')
           .delete()
-          .eq('user_id', user!.id as string)
-          .eq('article_id', page.id);
+          .eq('user_id', user?.id ?? '')
+          .eq('article_id', page?.id ?? '');
       } else {
-        await supabase
-          .from('likes')
-          .insert({ user_id: user!.id as string, article_id: page.id });
-        
-        // Track like analytics
-        trackArticleLike(page.id);
+        if (user?.id && page?.id) {
+          await supabase
+            .from('likes')
+            .insert({ user_id: user.id, article_id: page.id });
+          // Track like analytics
+          trackArticleLike(page.id);
+        }
       }
       setIsLiked(!isLiked);
       setPage(prev => prev ? {
@@ -342,15 +343,16 @@ export default function Page() {
         await supabase
           .from('bookmarks')
           .delete()
-          .eq('user_id', user!.id as string)
-          .eq('article_id', page.id);
+          .eq('user_id', user?.id ?? '')
+          .eq('article_id', page?.id ?? '');
       } else {
-        await supabase
-          .from('bookmarks')
-          .insert({ user_id: user!.id as string, article_id: page.id });
-        
-        // Track bookmark analytics
-        trackArticleBookmark(page.id);
+        if (user?.id && page?.id) {
+          await supabase
+            .from('bookmarks')
+            .insert({ user_id: user.id, article_id: page.id });
+          // Track bookmark analytics
+          trackArticleBookmark(page.id);
+        }
       }
       setIsBookmarked(!isBookmarked);
       setPage(prev => prev ? {
@@ -374,12 +376,14 @@ export default function Page() {
         await supabase
           .from('follows')
           .delete()
-          .eq('follower_id', user!.id as string)
-          .eq('following_id', page.author_id);
+          .eq('follower_id', user?.id ?? '')
+          .eq('following_id', page?.author_id ?? '');
       } else {
-        await supabase
-          .from('follows')
-          .insert({ follower_id: user!.id as string, following_id: page.author_id });
+        if (user?.id && page?.author_id) {
+          await supabase
+            .from('follows')
+            .insert({ follower_id: user.id, following_id: page.author_id });
+        }
       }
       setIsFollowing(!isFollowing);
     } catch (error) {
@@ -394,8 +398,8 @@ export default function Page() {
   const handleShare = async () => {
     try {
       await navigator.share({
-        title: page?.title,
-        text: page?.subtitle,
+        title: page?.title ?? '',
+        text: page?.subtitle ?? '',
         url: window.location.href,
       });
     } catch (error) {
@@ -414,18 +418,20 @@ export default function Page() {
     }
     if (!page) return;
     try {
-      await (supabase as any)
-        .from('content_reports')
-        .insert({
-          reported_item_type: 'page',
-          reported_item_id: page.id,
-          reporter_user_id: user?.id,
-          reason: reportReason || 'Inappropriate or spam',
-          status: 'pending',
-        });
-      toast({ title: 'Report submitted', description: 'Our team will review this content shortly.' });
-      setReportOpen(false);
-      setReportReason('');
+      if (page?.id && user?.id) {
+        await (supabase as any)
+          .from('content_reports')
+          .insert({
+            reported_item_type: 'page',
+            reported_item_id: page.id,
+            reporter_user_id: user.id,
+            reason: reportReason || 'Inappropriate or spam',
+            status: 'pending',
+          });
+        toast({ title: 'Report submitted', description: 'Our team will review this content shortly.' });
+        setReportOpen(false);
+        setReportReason('');
+      }
     } catch (e: any) {
       toast({ title: 'Failed to submit report', description: e.message, variant: 'destructive' });
     }
@@ -434,13 +440,15 @@ export default function Page() {
   const handleArchive = async () => {
     if (!page) return;
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_archived: true })
-        .eq('id', page.id);
-      if (error) throw error;
-      toast({ title: 'Archived', description: 'Page moved to archive.' });
-      // Optionally redirect or update UI
+      if (page?.id) {
+        const { error } = await supabase
+          .from('articles')
+          .update({ is_archived: true })
+          .eq('id', page.id);
+        if (error) throw error;
+        toast({ title: 'Archived', description: 'Page moved to archive.' });
+        // Optionally redirect or update UI
+      }
     } catch (error) {
       console.error('Error archiving article:', error);
       toast({
@@ -457,15 +465,17 @@ export default function Page() {
     if (!page) return;
 
     try {
-      const { error } = await supabase
-        .from('articles')
-        .delete()
-        .eq('id', page.id);
+      if (page?.id) {
+        const { error } = await supabase
+          .from('articles')
+          .delete()
+          .eq('id', page.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({ title: 'Page deleted successfully' });
-      navigate('/feed');
+        toast({ title: 'Page deleted successfully' });
+        navigate('/feed');
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -704,7 +714,7 @@ export default function Page() {
   }
 
   return (
-    <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-0">
       <div className="flex items-center justify-between mb-6">
         <BackButton to={from === 'archive' ? '/archive' : undefined} />
         <div className="flex items-center gap-2">
@@ -751,7 +761,7 @@ export default function Page() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={page.profiles.avatar_url} />
+              <AvatarImage src={page.profiles.avatar_url ?? ''} />
               <AvatarFallback>
                 {page.profiles.display_name?.charAt(0) || page.profiles.username?.charAt(0)}
               </AvatarFallback>
@@ -761,7 +771,7 @@ export default function Page() {
                 {page.profiles.display_name || page.profiles.username}
               </p>
               <div className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(page.published_at))} ago
+                {page.published_at ? formatDistanceToNow(new Date(page.published_at)) : ''} ago
                 {page.reading_time && ` · ${page.reading_time} min read`}
                 <span className="mx-1">·</span>
                 <span className="inline-flex items-center">
@@ -800,7 +810,7 @@ export default function Page() {
           <div className="mb-6 overflow-hidden rounded-lg" style={{ aspectRatio: '3 / 1' }}>
             <img
               src={page.cover_image_url}
-              alt={page.title}
+              alt={page.title ?? ''}
               className="w-full h-full object-cover"
             />
           </div>
@@ -889,7 +899,7 @@ export default function Page() {
             <p className="text-sm text-muted-foreground">Tell us briefly what's wrong with this page.</p>
             <Textarea
               placeholder="Why are you reporting this content?"
-              value={reportReason}
+              value={reportReason ?? ''}
               onChange={(e) => setReportReason(e.target.value)}
               rows={4}
             />

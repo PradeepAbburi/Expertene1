@@ -12,7 +12,7 @@ const textRevealVariants: Variants = {
 
 const Hero = () => {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black" style={{marginTop: 0, paddingTop: 0}}>
       {/* Grid-like checkbox background */}
       <div style={{
         position: 'absolute',
@@ -31,7 +31,7 @@ const Hero = () => {
       </div>
 
       {/* Content */}
-      <div className="relative w-full px-4 py-32 md:px-8">
+  <div className="relative w-full px-4 md:px-8" style={{marginTop: 0, paddingTop: 0}}>
         <div className="mx-auto flex w-full flex-col items-center gap-12 text-center">
           <motion.div 
             initial="initial"
