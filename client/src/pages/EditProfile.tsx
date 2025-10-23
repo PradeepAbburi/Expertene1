@@ -13,12 +13,12 @@ import { BackButton } from '@/components/BackButton';
 import { Camera, Save } from 'lucide-react';
 
 interface ProfileData {
-  username: string;
-  display_name: string;
-  bio: string;
-  avatar_url: string;
-  website_url: string;
-  location: string;
+  username: string | null | undefined;
+  display_name: string | null | undefined;
+  bio: string | null | undefined;
+  avatar_url: string | null | undefined;
+  website_url: string | null | undefined;
+  location: string | null | undefined;
 }
 
 export default function EditProfile() {

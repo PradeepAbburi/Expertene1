@@ -14,16 +14,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Article {
-  id: string;
-  title: string;
-  subtitle?: string;
-  cover_image_url?: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  subtitle?: string | null | undefined;
+  cover_image_url?: string | null | undefined;
   reading_time?: number;
   likes_count: number;
   bookmarks_count: number;
   views_count: number;
   comments_count: number;
-  published_at: string;
+  published_at: string | null | undefined;
   tags: string[];
 }
 

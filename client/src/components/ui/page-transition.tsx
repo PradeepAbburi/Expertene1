@@ -24,7 +24,7 @@ const pageVariants: Variants = {
 
 interface PageTransitionProps {
   children: React.ReactNode;
-  className?: string;
+  className?: string | null | undefined;
 }
 
 export const PageTransition = ({ children, className = "" }: PageTransitionProps) => {

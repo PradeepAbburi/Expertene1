@@ -11,24 +11,24 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface CommunityPostCardProps {
   post: {
-    id: string;
-    title: string;
+    id: string | null | undefined;
+    title: string | null | undefined;
     content: any;
     is_pinned: boolean;
     likes_count: number;
     comments_count: number;
-    created_at: string;
-    creator_id: string;
-    author_id: string;
+    created_at: string | null | undefined;
+    creator_id: string | null | undefined;
+    author_id: string | null | undefined;
     profiles: {
-      username: string;
-      display_name: string;
-      avatar_url: string;
+      username: string | null | undefined;
+      display_name: string | null | undefined;
+      avatar_url: string | null | undefined;
     } | null;
     creators: {
       profiles: {
-        username: string;
-        display_name: string;
+        username: string | null | undefined;
+        display_name: string | null | undefined;
       };
     } | null;
   };
@@ -53,7 +53,7 @@ export function CommunityPostCard({ post, onUpdate }: CommunityPostCardProps) {
           .from('likes')
           .delete()
           .eq('article_id', post.id)
-          .eq('user_id', user?.id);
+          .eq('user_id', user?.id ?? '');
 
         if (error) throw error;
         

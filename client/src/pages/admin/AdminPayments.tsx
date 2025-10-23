@@ -9,18 +9,18 @@ import { ArrowLeft, Download, DollarSign, CreditCard, Filter } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 
 interface Payment {
-  id: string;
+  id: string | null | undefined;
   user_id: string | null;
   amount: number;
-  currency: string;
+  currency: string | null | undefined;
   status: 'succeeded' | 'pending' | 'failed' | 'refunded' | 'canceled';
   provider: string | null;
   provider_payment_id: string | null;
   description: string | null;
-  created_at: string;
+  created_at: string | null | undefined;
   profiles?: {
-    username: string;
-    display_name: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
   } | null;
 }
 

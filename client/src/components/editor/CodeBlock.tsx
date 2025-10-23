@@ -8,8 +8,8 @@ import hljs from 'highlight.js';
 import { useEffect, useRef } from 'react';
 
 interface CodeContent {
-  code: string;
-  language: string;
+  code: string | null | undefined;
+  language: string | null | undefined;
 }
 
 interface CodeBlockProps {

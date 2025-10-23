@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
 
 interface Creator {
-  user_id: string;
+  user_id: string | null | undefined;
   monthly_price: number;
   yearly_price: number;
   perks: string[];

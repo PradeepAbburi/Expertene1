@@ -15,22 +15,22 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Textarea } from '@/components/ui/textarea';
 
 interface Page {
-  id: string;
-  title: string;
-  subtitle?: string;
-  cover_image_url?: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  subtitle?: string | null | undefined;
+  cover_image_url?: string | null | undefined;
   reading_time?: number;
   likes_count: number;
   bookmarks_count: number;
   views_count: number;
   comments_count: number;
-  published_at: string;
+  published_at: string | null | undefined;
   tags: string[];
   profiles: {
-    user_id: string;
-    username: string;
-    display_name: string;
-    avatar_url?: string;
+    user_id: string | null | undefined;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url?: string | null | undefined;
   };
 }
 

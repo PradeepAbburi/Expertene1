@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 interface BackButtonProps {
-  to?: string; // explicit path to navigate back to
+  to?: string | null | undefined; // explicit path to navigate back to
 }
 
 export function BackButton({ to }: BackButtonProps) {

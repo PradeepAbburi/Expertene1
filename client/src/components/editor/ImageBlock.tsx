@@ -15,12 +15,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { TextBlock } from '@/components/editor/TextBlock';
 
 interface ImageContent {
-  url: string;
-  alt: string;
-  caption: string;
+  url: string | null | undefined;
+  alt: string | null | undefined;
+  caption: string | null | undefined;
   width?: number; // Percentage width (25, 50, 75, 100)
   sideTextEnabled?: boolean;
-  sideText?: string;
+  sideText?: string | null | undefined;
   sidePosition?: 'left' | 'right';
 }
 

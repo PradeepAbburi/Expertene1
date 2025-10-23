@@ -9,17 +9,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, Heart, Bookmark, Eye } from 'lucide-react';
 
 interface TrendingPage {
-  id: string;
-  title: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
   likes_count: number;
   bookmarks_count: number;
   views_count: number;
-  published_at: string;
+  published_at: string | null | undefined;
   score: number;
 }
 
 interface TrendingTag {
-  tag: string;
+  tag: string | null | undefined;
   count: number;
 }
 

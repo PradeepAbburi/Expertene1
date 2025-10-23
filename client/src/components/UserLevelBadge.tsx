@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserLevelBadgeProps {
-  userId: string;
-  className?: string;
+  userId: string | null | undefined;
+  className?: string | null | undefined;
 }
 
 export function UserLevelBadge({ userId, className = "" }: UserLevelBadgeProps) {

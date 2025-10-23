@@ -28,7 +28,7 @@ export function Layout({ children }: LayoutProps) {
   const showSidebars = location.pathname === '/feed';
 
   // Announcements bar state
-  const [announcements, setAnnouncements] = useState<{ id: string; title: string; message: string }[]>([]);
+  const [announcements, setAnnouncements] = useState<{ id: string | null | undefined; title: string | null | undefined; message: string }[]>([]);
   useEffect(() => {
     // Only fetch active announcements for non-admin routes
     if (isAdminRoute) return;

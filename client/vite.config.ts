@@ -4,20 +4,13 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
-  // Try to dynamically load optional dev-only plugin
   let taggerPlugin = null;
-  if (mode === 'development') {
+  if (mode === "development") {
     try {
-      // dynamic import; if package is not installed we fall back
-      // to null and continue starting the dev server
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const mod = await import('lovable-tagger');
+      // @ts-ignore - optional dev-only plugin may not be installed or have type declarations
+      const mod = await import("vite-plugin-component-tagger");
       taggerPlugin = mod?.componentTagger?.();
     } catch (e) {
-      // package not available - skip the plugin
-      // This prevents the dev server from crashing when the optional
-      // package is not installed.
-      // console.info('lovable-tagger not installed, skipping component tagging plugin');
       taggerPlugin = null;
     }
   }
@@ -27,14 +20,16 @@ export default defineConfig(async ({ mode }) => {
       host: "::",
       port: 8080,
     },
-    plugins: [
-      react(),
-      taggerPlugin,
-    ].filter(Boolean),
+    plugins: [react(), taggerPlugin].filter(Boolean),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    build: {
+      outDir: "dist", // ✅ required for Vercel
+      sourcemap: false,
+    },
+    base: "/", // ✅ ensure correct public path
   };
 });

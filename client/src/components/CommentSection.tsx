@@ -10,19 +10,19 @@ import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, Send } from 'lucide-react';
 
 interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
+  id: string | null | undefined;
+  content: string | null | undefined;
+  created_at: string | null | undefined;
+  user_id: string | null | undefined;
   profiles: {
-    username: string;
-    display_name: string;
-    avatar_url?: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url?: string | null | undefined;
   };
 }
 
 interface CommentSectionProps {
-  articleId: string;
+  articleId: string | null | undefined;
 }
 
 export function CommentSection({ articleId }: CommentSectionProps) {

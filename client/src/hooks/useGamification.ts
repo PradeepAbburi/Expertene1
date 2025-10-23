@@ -8,19 +8,19 @@ interface UserLevel {
 }
 
 interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  requirement_type: string;
+  id: string | null | undefined;
+  name: string | null | undefined;
+  description: string | null | undefined;
+  icon: string | null | undefined;
+  requirement_type: string | null | undefined;
   requirement_value: number;
 }
 
 interface Task {
-  id: string;
-  title: string;
-  description: string;
-  task_type: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  description: string | null | undefined;
+  task_type: string | null | undefined;
   target_value: number;
   reward_experience: number;
   current_progress?: number;

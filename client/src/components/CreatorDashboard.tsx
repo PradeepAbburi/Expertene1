@@ -10,13 +10,13 @@ import { Users, DollarSign, MessageCircle, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface Creator {
-  id: string;
-  user_id: string;
+  id: string | null | undefined;
+  user_id: string | null | undefined;
   is_verified: boolean;
   subscriber_count: number;
   monthly_price: number;
   yearly_price: number;
-  description: string;
+  description: string | null | undefined;
   perks: string[];
 }
 
@@ -57,7 +57,7 @@ export function CreatorDashboard({ creator }: CreatorDashboardProps) {
           yearly_price: yearlyPrice,
           perks
         })
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.id ?? '');
 
       if (error) throw error;
 

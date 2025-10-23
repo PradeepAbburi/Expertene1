@@ -11,24 +11,24 @@ import { Trophy, Flame, Medal, Award, Users } from 'lucide-react';
 import { BackButton } from '@/components/BackButton';
 
 interface LeaderboardEntry {
-  user_id: string;
+  user_id: string | null | undefined;
   current_streak: number;
   longest_streak: number;
   total_active_days: number;
   profiles: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url: string | null | undefined;
   };
 }
 
 interface FollowerLeaderboardEntry {
-  user_id: string;
+  user_id: string | null | undefined;
   followers_count: number;
   following_count: number;
-  username: string;
-  display_name: string;
-  avatar_url: string;
+  username: string | null | undefined;
+  display_name: string | null | undefined;
+  avatar_url: string | null | undefined;
 }
 
 export default function Leaderboard() {

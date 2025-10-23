@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
-  className?: string;
-  text?: string;
+  className?: string | null | undefined;
+  text?: string | null | undefined;
 }
 
 export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerProps) {

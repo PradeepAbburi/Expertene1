@@ -9,12 +9,12 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface UserSearchResult {
-  user_id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string;
+  user_id: string | null | undefined;
+  username: string | null | undefined;
+  display_name: string | null | undefined;
+  avatar_url: string | null | undefined;
   is_blocked: boolean;
-  created_at: string;
+  created_at: string | null | undefined;
   followers_count: number;
   following_count: number;
 }

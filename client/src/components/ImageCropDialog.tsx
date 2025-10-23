@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 interface ImageCropDialogProps {
   open: boolean;
   onClose: () => void;
-  imageSrc: string;
+  imageSrc: string | null | undefined;
   onCropComplete: (croppedImageBlob: Blob) => void;
   aspect?: number;
 }

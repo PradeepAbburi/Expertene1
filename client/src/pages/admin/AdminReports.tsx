@@ -10,17 +10,17 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Report {
-  id: string;
-  reported_item_type: string;
-  reported_item_id: string;
-  reporter_user_id: string;
-  reason: string;
-  status: string;
-  created_at: string;
+  id: string | null | undefined;
+  reported_item_type: string | null | undefined;
+  reported_item_id: string | null | undefined;
+  reporter_user_id: string | null | undefined;
+  reason: string | null | undefined;
+  status: string | null | undefined;
+  created_at: string | null | undefined;
   reporter: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url: string | null | undefined;
   };
 }
 

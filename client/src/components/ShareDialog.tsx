@@ -12,12 +12,12 @@ import { useToast } from '@/hooks/use-toast';
 interface ShareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  pageId: string;
-  shareToken?: string;
+  pageId: string | null | undefined;
+  shareToken?: string | null | undefined;
   collaborators: Array<{
-    id: string;
-    user_email: string;
-    permission: string;
+    id: string | null | undefined;
+    user_email: string | null | undefined;
+    permission: string | null | undefined;
   }>;
   onShareTokenGenerated: (token: string) => void;
   onCollaboratorAdded: () => void;

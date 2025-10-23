@@ -9,11 +9,11 @@ import { Search, Tag, User } from 'lucide-react';
 
 interface SearchResult {
   type: 'user' | 'tag';
-  id: string;
-  username?: string;
-  display_name?: string;
-  avatar_url?: string;
-  tag?: string;
+  id: string | null | undefined;
+  username?: string | null | undefined;
+  display_name?: string | null | undefined;
+  avatar_url?: string | null | undefined;
+  tag?: string | null | undefined;
 }
 
 export function SearchBar() {

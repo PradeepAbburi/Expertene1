@@ -15,41 +15,41 @@ import { RoomsList } from '@/components/RoomsList';
 import { useToast } from '@/components/ui/use-toast';
 
 interface Creator {
-  id: string;
-  user_id: string;
+  id: string | null | undefined;
+  user_id: string | null | undefined;
   is_verified: boolean;
   subscriber_count: number;
   monthly_price: number;
   yearly_price: number;
-  description: string;
+  description: string | null | undefined;
   perks: string[];
   profiles: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url: string | null | undefined;
     followers_count: number;
   };
 }
 
 interface CommunityPost {
-  id: string;
-  title: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
   content: any;
   is_pinned: boolean;
   likes_count: number;
   comments_count: number;
-  created_at: string;
-  creator_id: string;
-  author_id: string;
+  created_at: string | null | undefined;
+  creator_id: string | null | undefined;
+  author_id: string | null | undefined;
   profiles: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url: string | null | undefined;
   };
   creators: {
     profiles: {
-      username: string;
-      display_name: string;
+      username: string | null | undefined;
+      display_name: string | null | undefined;
     };
   };
 }
@@ -104,7 +104,7 @@ export default function Community() {
             followers_count
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.id ?? '')
         .single();
 
       if (userCreatorData) {

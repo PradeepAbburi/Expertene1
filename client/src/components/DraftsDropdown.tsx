@@ -8,9 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
 interface Draft {
-  id: string;
-  title: string;
-  updated_at: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  updated_at: string | null | undefined;
 }
 
 export function DraftsDropdown() {

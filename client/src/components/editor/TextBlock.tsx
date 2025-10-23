@@ -3,7 +3,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 interface TextBlockProps {
-  content: string;
+  content: string | null | undefined;
   onChange: (content: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;

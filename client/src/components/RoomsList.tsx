@@ -12,25 +12,25 @@ import { useToast } from '@/components/ui/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Room {
-  id: string;
-  name: string;
-  description: string;
+  id: string | null | undefined;
+  name: string | null | undefined;
+  description: string | null | undefined;
   is_private: boolean;
   max_members: number;
   current_members: number;
-  created_at: string;
-  creator_id: string;
+  created_at: string | null | undefined;
+  creator_id: string | null | undefined;
   creators: {
     profiles: {
-      username: string;
-      display_name: string;
-      avatar_url: string;
+      username: string | null | undefined;
+      display_name: string | null | undefined;
+      avatar_url: string | null | undefined;
     };
   };
 }
 
 interface Creator {
-  user_id: string;
+  user_id: string | null | undefined;
   is_verified: boolean;
 }
 

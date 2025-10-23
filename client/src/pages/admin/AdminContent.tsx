@@ -9,20 +9,20 @@ import { ArrowLeft, FileText, Download, Search, Eye, ThumbsUp, TrendingUp } from
 import { useNavigate } from 'react-router-dom';
 
 interface PageContent {
-  id: string;
-  title: string;
-  slug: string;
-  author_id: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  slug: string | null | undefined;
+  author_id: string | null | undefined;
   views_count: number;
   likes_count: number;
   bookmarks_count: number;
   comments_count: number;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null | undefined;
+  updated_at: string | null | undefined;
   is_published: boolean;
   profiles: {
-    username: string;
-    display_name: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
   };
 }
 

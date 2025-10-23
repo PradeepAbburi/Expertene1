@@ -3,11 +3,11 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
-  user_id: string;
-  username: string;
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
+  user_id: string | null | undefined;
+  username: string | null | undefined;
+  display_name?: string | null | undefined;
+  avatar_url?: string | null | undefined;
+  bio?: string | null | undefined;
   followers_count?: number;
   following_count?: number;
 }

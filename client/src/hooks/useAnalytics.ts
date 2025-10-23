@@ -1,9 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
 interface AnalyticsEvent {
-  event_type: string;
-  article_id?: string;
-  target_user_id?: string;
+  event_type: string | null | undefined;
+  article_id?: string | null | undefined;
+  target_user_id?: string | null | undefined;
   metadata?: Record<string, any>;
 }
 

@@ -10,25 +10,25 @@ import { ArrowLeft, Trophy, Users, Flame, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface StreakEntry {
-  user_id: string;
+  user_id: string | null | undefined;
   current_streak: number;
   longest_streak: number;
   total_active_days: number;
   profiles: {
-    username: string;
-    display_name: string;
-    avatar_url: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url: string | null | undefined;
   };
 }
 
 interface FollowerEntry {
-  user_id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string;
+  user_id: string | null | undefined;
+  username: string | null | undefined;
+  display_name: string | null | undefined;
+  avatar_url: string | null | undefined;
   followers_count: number;
   following_count: number;
-  created_at: string;
+  created_at: string | null | undefined;
 }
 
 export default function AdminLeaderboards() {

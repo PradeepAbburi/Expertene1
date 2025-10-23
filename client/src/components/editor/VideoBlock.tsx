@@ -11,8 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 interface VideoContent {
-  url: string;
-  caption: string;
+  url: string | null | undefined;
+  caption: string | null | undefined;
 }
 
 interface VideoBlockProps {

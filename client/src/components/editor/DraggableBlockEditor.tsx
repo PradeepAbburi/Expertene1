@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export interface Block {
-  id: string;
+  id: string | null | undefined;
   type: 'text' | 'image' | 'video' | 'code' | 'table' | 'spacer';
   // new: spacer block type
   // extending union below

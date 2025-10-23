@@ -18,35 +18,35 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProfileSkeleton } from '@/components/ProfileSkeleton';
 
 interface ProfileData {
-  user_id: string;
-  username: string;
-  display_name: string;
-  bio?: string;
-  avatar_url?: string;
-  website_url?: string;
-  location?: string;
+  user_id: string | null | undefined;
+  username: string | null | undefined;
+  display_name: string | null | undefined;
+  bio?: string | null | undefined;
+  avatar_url?: string | null | undefined;
+  website_url?: string | null | undefined;
+  location?: string | null | undefined;
   followers_count: number;
   following_count: number;
   articles_count: number;
 }
 
 interface Article {
-  id: string;
-  title: string;
-  subtitle?: string;
-  cover_image_url?: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  subtitle?: string | null | undefined;
+  cover_image_url?: string | null | undefined;
   reading_time?: number;
   likes_count: number;
   bookmarks_count: number;
   views_count: number;
   comments_count: number;
-  published_at: string;
+  published_at: string | null | undefined;
   tags: string[];
   profiles: {
-    user_id: string;
-    username: string;
-    display_name: string;
-    avatar_url?: string;
+    user_id: string | null | undefined;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url?: string | null | undefined;
   };
 }
 

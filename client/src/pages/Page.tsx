@@ -34,24 +34,24 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Textarea } from '@/components/ui/textarea';
 
 interface PageData {
-  id: string;
-  title: string;
-  subtitle?: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  subtitle?: string | null | undefined;
   content: any;
-  cover_image_url?: string;
+  cover_image_url?: string | null | undefined;
   reading_time?: number;
   likes_count: number;
   bookmarks_count: number;
   views_count: number;
   comments_count: number;
-  published_at: string;
+  published_at: string | null | undefined;
   tags: string[];
-  author_id: string;
+  author_id: string | null | undefined;
   profiles: {
-    username: string;
-    display_name: string;
-    avatar_url?: string;
-    bio?: string;
+    username: string | null | undefined;
+    display_name: string | null | undefined;
+    avatar_url?: string | null | undefined;
+    bio?: string | null | undefined;
     followers_count: number;
   };
 }

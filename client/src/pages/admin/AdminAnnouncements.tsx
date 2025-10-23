@@ -10,11 +10,11 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 
 interface Announcement {
-  id: string;
-  title: string;
-  message: string;
+  id: string | null | undefined;
+  title: string | null | undefined;
+  message: string | null | undefined;
   is_active: boolean;
-  created_at: string;
+  created_at: string | null | undefined;
 }
 
 export default function AdminAnnouncements() {
