@@ -1,0 +1,258 @@
+@import './styles/globals.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Expertene dark theme */
+    --background: 0 0% 5.1%; /* #0d0e0f */
+    --foreground: 0 0% 83.5%; /* #d5d5d5 */
+    --card: 0 0% 5.1%;
+    --card-foreground: 0 0% 83.5%;
+    --popover: 0 0% 5.1%;
+    --popover-foreground: 0 0% 83.5%;
+    --primary: 180 100% 20%; /* #0d5756 teal green */
+    --primary-foreground: 0 0% 92.2%; /* #ebebea */
+    --secondary: 0 0% 9.8%;
+    --secondary-foreground: 0 0% 83.5%;
+    --muted: 0 0% 9.8%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 180 100% 20%;
+    --accent-foreground: 0 0% 92.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 180 100% 20%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 5.1%;
+    --sidebar-foreground: 0 0% 83.5%;
+    --sidebar-primary: 180 100% 20%;
+    --sidebar-primary-foreground: 0 0% 92.2%;
+    --sidebar-accent: 0 0% 9.8%;
+    --sidebar-accent-foreground: 0 0% 83.5%;
+    --sidebar-border: 0 0% 14.9%;
+    --sidebar-ring: 180 100% 20%;
+    
+    /* Custom design tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(180 100% 20%), hsl(180 80% 25%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 5.1%), hsl(0 0% 9.8%));
+    --shadow-elegant: 0 10px 30px -10px hsl(180 100% 20% / 0.3);
+    --shadow-soft: 0 4px 16px -8px hsl(0 0% 0% / 0.4);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    /* Keep same values as root since we're using dark theme by default */
+    --background: 0 0% 5.1%;
+    --foreground: 0 0% 83.5%;
+    --card: 0 0% 5.1%;
+    --card-foreground: 0 0% 83.5%;
+    --popover: 0 0% 5.1%;
+    --popover-foreground: 0 0% 83.5%;
+    --primary: 180 100% 20%;
+    --primary-foreground: 0 0% 92.2%;
+    --secondary: 0 0% 9.8%;
+    --secondary-foreground: 0 0% 83.5%;
+    --muted: 0 0% 9.8%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 180 100% 20%;
+    --accent-foreground: 0 0% 92.2%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 180 100% 20%;
+    --sidebar-background: 0 0% 5.1%;
+    --sidebar-foreground: 0 0% 83.5%;
+    --sidebar-primary: 180 100% 20%;
+    --sidebar-primary-foreground: 0 0% 92.2%;
+    --sidebar-accent: 0 0% 9.8%;
+    --sidebar-accent-foreground: 0 0% 83.5%;
+    --sidebar-border: 0 0% 14.9%;
+    --sidebar-ring: 180 100% 20%;
+    
+    /* Dark mode custom tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(180 100% 20%), hsl(180 80% 25%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 5.1%), hsl(0 0% 9.8%));
+    --shadow-elegant: 0 10px 30px -10px hsl(180 100% 20% / 0.3);
+    --shadow-soft: 0 4px 16px -8px hsl(0 0% 0% / 0.4);
+  }
+}
+
+/* Quill Editor Styling */
+.quill-editor .ql-toolbar {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.quill-editor .ql-container {
+  border: none;
+  font-size: 14px;
+}
+
+.quill-editor .ql-editor {
+  padding: 12px 0;
+  min-height: 120px;
+}
+
+.quill-editor .ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground));
+  font-style: normal;
+}
+
+/* Drag and Drop Styling */
+.react-beautiful-dnd-drag-handle:hover {
+  color: hsl(var(--primary));
+}
+
+.react-beautiful-dnd-dragging {
+  opacity: 0.8;
+  transform: rotate(5deg);
+}
+
+/* Dropdown Menu Styling */
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content] {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+/* Quill Editor Styles */
+.ql-toolbar {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--muted)) !important;
+}
+
+.ql-container {
+  border: none !important;
+  font-family: inherit !important;
+}
+
+.ql-editor {
+  min-height: 100px !important;
+  padding: 12px !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+.ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground)) !important;
+  font-style: normal !important;
+}
+
+.ql-toolbar .ql-formats {
+  margin-right: 8px !important;
+}
+
+.ql-toolbar .ql-picker-label {
+  color: hsl(var(--foreground)) !important;
+}
+
+.ql-toolbar .ql-stroke {
+  stroke: hsl(var(--foreground)) !important;
+}
+
+.ql-toolbar .ql-fill {
+  fill: hsl(var(--foreground)) !important;
+}
+
+.ql-toolbar button:hover {
+  background: hsl(var(--accent)) !important;
+}
+
+.ql-toolbar button.ql-active {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.ql-toolbar button.ql-active .ql-stroke {
+  stroke: hsl(var(--primary-foreground)) !important;
+}
+
+.ql-toolbar button.ql-active .ql-fill {
+  fill: hsl(var(--primary-foreground)) !important;
+}
+
+@layer components {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  /* Custom scrollbar styling */
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Professional custom scrollbar */
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}

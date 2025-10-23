@@ -1,0 +1,124 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+// import Landing from "./pages/Landing"; // Unused
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Feed from "./pages/Feed";
+import CreatePage from "./pages/CreatePage";
+import Page from "./pages/Page";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
+import Analytics from "./pages/Analytics";
+import Bookmarks from "./pages/Bookmarks";
+import Liked from "./pages/Liked";
+import Archive from "./pages/Archive";
+import Community from "./pages/Community";
+import Explore from "./pages/Explore";
+import Leaderboard from "./pages/Leaderboard";
+import NotFound from "./pages/NotFound";
+import Offline from "./pages/Offline";
+import { useOnline } from "./hooks/useOnline";
+import Admin from "./pages/Admin";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminLeaderboards from "./pages/admin/AdminLeaderboards";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminContent from "@/pages/admin/AdminContent";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminPayments from "./pages/admin/AdminPayments";
+import TermsAndConditions from "./pages/TermsAndConditions";
+// import Services from "./pages/Services"; // Unused
+// import APIPage from "./pages/API"; // Unused
+import "./styles/landing.css";
+import { Layout } from "./components/Layout";
+
+const queryClient = new QueryClient();
+
+export default function App() {
+  const online = useOnline();
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          {online ? (
+            isLoggedIn ? (
+              <Layout>
+                <Routes>
+                  <Route path="/feed" element={<Feed />} />
+                  <Route path="/create" element={<CreatePage />} />
+                  <Route path="/page/:id" element={<Page />} />
+                  <Route path="/shared/:token" element={<Page />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile/:username" element={<Profile />} />
+                  <Route path="/edit-profile" element={<EditProfile />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/bookmarks" element={<Bookmarks />} />
+                  <Route path="/liked" element={<Liked />} />
+                  <Route path="/archive" element={<Archive />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/terms" element={<TermsAndConditions />} />
+                  <Route path="/privacy" element={<TermsAndConditions />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/leaderboards" element={<AdminLeaderboards />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/content" element={<AdminContent />} />
+                  <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/payments" element={<AdminPayments />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            ) : (
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/feed" element={<Feed />} />
+                  <Route path="/create" element={<CreatePage />} />
+                  <Route path="/page/:id" element={<Page />} />
+                  <Route path="/shared/:token" element={<Page />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile/:username" element={<Profile />} />
+                  <Route path="/edit-profile" element={<EditProfile />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/bookmarks" element={<Bookmarks />} />
+                  <Route path="/liked" element={<Liked />} />
+                  <Route path="/archive" element={<Archive />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/terms" element={<TermsAndConditions />} />
+                  <Route path="/privacy" element={<TermsAndConditions />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/leaderboards" element={<AdminLeaderboards />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/content" element={<AdminContent />} />
+                  <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/payments" element={<AdminPayments />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            )
+          ) : (
+            <Offline />
+          )}
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}

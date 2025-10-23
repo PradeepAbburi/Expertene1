@@ -1,0 +1,13 @@
+{
+  "name": "ink-stream-feed-server",
+  "version": "1.0.0",
+  "description": "Backend server for ink-stream-feed",
+  "type": "module",
+  "scripts": {
+    "dev": "supabase functions serve",
+    "deploy": "supabase functions deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.56.0"
+  }
+}

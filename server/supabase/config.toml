@@ -1,0 +1,10 @@
+project_id = "jxkbcyxzfnmnnawkwknn"
+
+[functions.analytics]
+verify_jwt = false
+
+[functions.upload-image]
+verify_jwt = true
+
+[functions.generate-slug]
+verify_jwt = false
