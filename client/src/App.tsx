@@ -6,6 +6,12 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Landing from "./pages/Landing"; // Unused
 import Index from "./pages/Index";
+import ExpNotebook from "./pages/ExpNotebook";
+import About from "./pages/About";
+import APIPage from "./pages/API";
+import Careers from "./pages/Careers";
+import Contact from "./pages/Contact";
+import ResetPassword from "./pages/ResetPassword";
 import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
 import CreatePage from "./pages/CreatePage";
@@ -79,13 +85,19 @@ export default function App() {
                   <Route path="/admin/content" element={<AdminContent />} />
                   <Route path="/admin/announcements" element={<AdminAnnouncements />} />
                   <Route path="/admin/payments" element={<AdminPayments />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Layout>
             ) : (
               <Layout>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                        <Route path="/" element={<Index />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/api" element={<APIPage />} />
+                        <Route path="/careers" element={<Careers />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/exp-notebook" element={<ExpNotebook />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/feed" element={<Feed />} />
                   <Route path="/create" element={<CreatePage />} />
@@ -110,6 +122,7 @@ export default function App() {
                   <Route path="/admin/content" element={<AdminContent />} />
                   <Route path="/admin/announcements" element={<AdminAnnouncements />} />
                   <Route path="/admin/payments" element={<AdminPayments />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Layout>

@@ -17,6 +17,18 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  // Google AdSense script loader
+  useEffect(() => {
+    const scriptId = 'adsbygoogle-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1115531355970011';
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
+  }, []);
 
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -177,6 +189,7 @@ export function Layout({ children }: LayoutProps) {
             <Link to={isAuthenticated ? "/feed" : "/"} className="text-xl font-bold gradient-primary bg-clip-text text-transparent whitespace-nowrap">
               Expertene
             </Link>
+            {/* ...existing code... */}
           </div>
           {/* Desktop SearchBar */}
           {isAuthenticated && <div className="hidden sm:block flex-1 max-w-md"><SearchBar /></div>}
@@ -287,7 +300,7 @@ export function Layout({ children }: LayoutProps) {
           </main>
         )}
       </div>
-      {!isAuthRoute && <Footer />}
+  {!isAuthRoute && location.pathname !== '/' && <Footer />}
       {/* Marquee animation styles and scrollbar hide */}
       <style>{`
         @keyframes marquee {

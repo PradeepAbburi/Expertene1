@@ -11,6 +11,34 @@ import { useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function Auth() {
+  // Forgot password state and handler
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: window.location.origin + '/reset-password'
+      });
+      if (error) throw error;
+      toast({
+        title: 'Password Reset Email Sent',
+        description: 'Check your inbox for a reset link.',
+      });
+      setShowForgot(false);
+      setForgotEmail('');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
   const enableUsernameLogin = (import.meta as any).env?.VITE_ENABLE_USERNAME_LOGIN === 'true';
   const [email, setEmail] = useState('');
   const [identifier, setIdentifier] = useState(''); // username or email
@@ -150,44 +178,6 @@ export default function Auth() {
 
   return (
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 overflow-hidden">
-      {/* Floating background elements */}
-      <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-10 h-96 w-96 rounded-full bg-primary/15 blur-3xl animate-pulse delay-1000" />
-      
-      {/* Moving people/user avatars in background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
-        {/* User avatar 1 - top left to bottom right */}
-        <div className="absolute top-10 left-5 h-16 w-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg animate-float-diagonal-1 flex items-center justify-center text-white font-bold text-xl">
-          A
-        </div>
-        {/* User avatar 2 - bottom left to top right */}
-        <div className="absolute bottom-20 left-20 h-20 w-20 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg animate-float-diagonal-2 flex items-center justify-center text-white font-bold text-2xl">
-          B
-        </div>
-        {/* User avatar 3 - top right to bottom left */}
-        <div className="absolute top-32 right-10 h-14 w-14 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 shadow-lg animate-float-diagonal-3 flex items-center justify-center text-white font-bold text-lg">
-          C
-        </div>
-        {/* User avatar 4 - middle left moving right */}
-        <div className="absolute top-1/2 left-0 h-18 w-18 rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-lg animate-float-horizontal flex items-center justify-center text-white font-bold text-xl">
-          D
-        </div>
-        {/* User avatar 5 - middle right moving left */}
-        <div className="absolute top-1/3 right-0 h-16 w-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg animate-float-horizontal-reverse flex items-center justify-center text-white font-bold text-xl">
-          E
-        </div>
-        {/* User avatar 6 - bottom right to top left */}
-        <div className="absolute bottom-10 right-32 h-22 w-22 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg animate-float-diagonal-4 flex items-center justify-center text-white font-bold text-2xl">
-          F
-        </div>
-        {/* Small user avatars scattered */}
-        <div className="absolute top-1/4 left-1/3 h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg animate-float-slow flex items-center justify-center text-white font-bold">
-          G
-        </div>
-        <div className="absolute bottom-1/4 right-1/3 h-12 w-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-lg animate-float-slow-reverse flex items-center justify-center text-white font-bold">
-          H
-        </div>
-      </div>
       
       <div className="w-full h-screen grid grid-cols-1 lg:grid-cols-2 relative z-10">
         {/* Left: Hero/Branding - Hidden on mobile */}
@@ -242,7 +232,7 @@ export default function Auth() {
         </div>
 
         {/* Right: Auth Forms */}
-        <div className="p-6 lg:p-12 bg-background flex items-center justify-center h-full">
+  <div className="p-6 lg:p-12 bg-black text-white flex items-center justify-center h-full rounded-none shadow-none">
           <div className="w-full max-w-md">
             <div className="mb-6">
               <h2 className="text-3xl lg:text-4xl font-bold gradient-primary bg-clip-text text-transparent mb-2">Welcome back</h2>
@@ -297,6 +287,15 @@ export default function Auth() {
                     <Button type="submit" className="w-full h-10 text-base font-semibold" disabled={loading}>
                       {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
+                    <div className="flex justify-end mt-2">
+                      <button
+                        type="button"
+                        className="text-primary text-sm hover:underline focus:outline-none"
+                        onClick={() => setShowForgot(true)}
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
                   </form>
                 </TabsContent>
 
@@ -395,7 +394,35 @@ export default function Auth() {
         </div>
       </div>
       
-      {/* Custom animations for floating avatars */}
+      {/* Forgot Password Modal */}
+      {showForgot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-background rounded-lg shadow-lg p-8 w-full max-w-sm">
+            <h3 className="text-xl font-bold mb-4">Reset Password</h3>
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <Label htmlFor="forgotEmail">Email</Label>
+                <Input
+                  id="forgotEmail"
+                  type="email"
+                  value={forgotEmail}
+                  onChange={e => setForgotEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setShowForgot(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={forgotLoading}>
+                  {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <style>{`
         @keyframes float-diagonal-1 {
           0%, 100% { transform: translate(0, 0); }

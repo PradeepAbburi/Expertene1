@@ -12,7 +12,16 @@ const textRevealVariants: Variants = {
 
 const Hero = () => {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black" style={{marginTop: 0, paddingTop: 0}}>
+  <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black scrollbar-hide" style={{marginTop: 0, paddingTop: 0, marginBottom: 0, paddingBottom: 0, height: '100vh'}}>
+      <style>{`
+        .scrollbar-hide {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
+        }
+      `}</style>
       {/* Grid-like checkbox background */}
       <div style={{
         position: 'absolute',
@@ -31,7 +40,7 @@ const Hero = () => {
       </div>
 
       {/* Content */}
-  <div className="relative w-full px-4 md:px-8" style={{marginTop: 0, paddingTop: 0}}>
+  <div className="relative w-full px-4 md:px-8" style={{marginTop: 0, paddingTop: 0, marginBottom: 0, paddingBottom: 0}}>
         <div className="mx-auto flex w-full flex-col items-center gap-12 text-center">
           <motion.div 
             initial="initial"
@@ -92,7 +101,7 @@ const Hero = () => {
               size="lg" 
               className="min-w-[200px] transition-smooth hover:scale-105 hover:bg-white/5"
             >
-              <Link to="/features">Learn More</Link>
+              <Link to="/about">Learn More</Link>
             </Button>
           </motion.div>
         </div>

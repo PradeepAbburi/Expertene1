@@ -821,6 +821,18 @@ export default function Page() {
           <p className="text-xl text-muted-foreground mb-6">{page.subtitle}</p>
         )}
 
+        {/* AdSense Ad Unit */}
+        <div className="flex justify-center my-6">
+          <ins className="adsbygoogle"
+            style={{ display: 'block', textAlign: 'center', minHeight: 90 }}
+            data-ad-client="ca-pub-1115531355970011"
+            data-ad-slot="1234567890"
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          ></ins>
+        </div>
+        <script dangerouslySetInnerHTML={{__html: "(window.adsbygoogle = window.adsbygoogle || []).push({});"}} />
+
         {/* Tags */}
         {page.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
