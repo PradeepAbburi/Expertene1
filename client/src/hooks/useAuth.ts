@@ -31,7 +31,7 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           fetchProfile(session.user.id);
@@ -53,7 +53,7 @@ export function useAuth() {
         .eq('user_id', userId)
         .single();
       
-      setProfile(data);
+  setProfile(data as unknown as UserProfile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -67,6 +67,12 @@ export function useAuth() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    try {
+      // remove any local auth token we may have stored
+      localStorage.removeItem('auth_token');
+    } catch (e) {
+      // ignore
+    }
   };
 
   return {

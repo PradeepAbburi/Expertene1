@@ -180,6 +180,14 @@ export default function Auth() {
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 overflow-hidden">
       
       <div className="w-full h-screen grid grid-cols-1 lg:grid-cols-2 relative z-10">
+        {/* Grid boxes background behind form */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          backgroundImage: `repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 32px)`
+        }} />
         {/* Left: Hero/Branding - Hidden on mobile */}
         <div className="relative bg-gradient-to-br from-primary via-primary to-primary/90 p-8 lg:p-16 text-white hidden lg:flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iLjA1IiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PC9zdmc+')] opacity-20" />
@@ -232,7 +240,7 @@ export default function Auth() {
         </div>
 
         {/* Right: Auth Forms */}
-  <div className="p-6 lg:p-12 bg-black text-white flex items-center justify-center h-full rounded-none shadow-none">
+  <div className="p-6 lg:p-12 bg-black text-white flex items-center justify-center h-full rounded-none shadow-none relative z-10">
           <div className="w-full max-w-md">
             <div className="mb-6">
               <h2 className="text-3xl lg:text-4xl font-bold gradient-primary bg-clip-text text-transparent mb-2">Welcome back</h2>

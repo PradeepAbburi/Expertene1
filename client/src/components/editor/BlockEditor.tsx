@@ -31,13 +31,13 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
     const newBlock: Block = {
       id: Date.now().toString(),
       type,
-      content: type === 'text' ? '' : type === 'image' ? { url: '', alt: '', caption: '' } : type === 'video' ? { url: '', caption: '' } : { code: '', language: 'javascript' }
+      content: type === 'text' ? '' : type === 'image' ? { url: '', alt: '', caption: '' } : type === 'video' ? { url: '', caption: '' } : { code: '', language: 'javascript', label: '' }
     };
     
     const newBlocks = [...blocks];
     newBlocks.splice(index + 1, 0, newBlock);
     onChange(newBlocks);
-    setActiveBlock(newBlock.id);
+  setActiveBlock(newBlock.id as string | null);
   };
 
   const updateBlock = (id: string, content: any) => {
@@ -52,17 +52,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
     onChange(newBlocks);
   };
 
-  const moveBlock = (id: string, direction: 'up' | 'down') => {
-    const currentIndex = blocks.findIndex(block => block.id === id);
-    if (currentIndex === -1) return;
-    
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= blocks.length) return;
-    
-    const newBlocks = [...blocks];
-    [newBlocks[currentIndex], newBlocks[newIndex]] = [newBlocks[newIndex], newBlocks[currentIndex]];
-    onChange(newBlocks);
-  };
+  // moveBlock removed (unused). Reintroduce later if drag/move controls are wired.
 
   const renderBlock = (block: Block, index: number) => {
     const isActive = activeBlock === block.id;
@@ -73,12 +63,12 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
         <Card className={`transition-all ${isActive ? 'ring-2 ring-primary' : ''}`}>
           <div className="relative">
             {/* Block Controls */}
-            <div className="absolute -left-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex flex-col gap-1">
-              <Button
+              <div className="absolute -left-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex flex-col gap-1">
+                <Button
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 cursor-grab"
-                onMouseDown={() => setActiveBlock(block.id)}
+                onMouseDown={() => setActiveBlock(block.id as string | null)}
               >
                 <GripVertical className="h-3 w-3" />
               </Button>
@@ -89,30 +79,30 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
               {block.type === 'text' && (
                 <TextBlock
                   content={block.content}
-                  onChange={(content) => updateBlock(block.id, content)}
-                  onFocus={() => setActiveBlock(block.id)}
+                  onChange={(content) => updateBlock(block.id as string, content)}
+                  onFocus={() => setActiveBlock(block.id as string | null)}
                   onBlur={() => setActiveBlock(null)}
                 />
               )}
               {block.type === 'image' && (
                 <ImageBlock
                   content={block.content}
-                  onChange={(content) => updateBlock(block.id, content)}
-                  onDelete={() => deleteBlock(block.id)}
+                  onChange={(content) => updateBlock(block.id as string, content)}
+                  onDelete={() => deleteBlock(block.id as string)}
                 />
               )}
               {block.type === 'video' && (
                 <VideoBlock
                   content={block.content}
-                  onChange={(content) => updateBlock(block.id, content)}
-                  onDelete={() => deleteBlock(block.id)}
+                  onChange={(content) => updateBlock(block.id as string, content)}
+                  onDelete={() => deleteBlock(block.id as string)}
                 />
               )}
               {block.type === 'code' && (
                 <CodeBlock
                   content={block.content}
-                  onChange={(content) => updateBlock(block.id, content)}
-                  onDelete={() => deleteBlock(block.id)}
+                  onChange={(content) => updateBlock(block.id as string, content)}
+                  onDelete={() => deleteBlock(block.id as string)}
                 />
               )}
             </div>

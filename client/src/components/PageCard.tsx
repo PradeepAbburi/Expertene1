@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { UserLevelBadge } from './UserLevelBadge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,8 +66,8 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
       const { data: likeData } = await supabase
         .from('likes')
         .select('id')
-        .eq('user_id', user!.id)
-        .eq('article_id', page.id)
+        .eq('user_id', user?.id ?? '')
+        .eq('article_id', page.id ?? '')
         .single();
 
       setIsLiked(!!likeData);
@@ -77,11 +76,24 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
       const { data: bookmarkData } = await supabase
         .from('bookmarks')
         .select('id')
-        .eq('user_id', user!.id)
-        .eq('article_id', page.id)
+        .eq('user_id', user?.id ?? '')
+        .eq('article_id', page.id ?? '')
         .single();
 
       setIsBookmarked(!!bookmarkData);
+
+      // Get real-time like and bookmark counts
+      const { count: likeCount } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('article_id', page.id ?? '');
+      setLikesCount(likeCount ?? 0);
+
+      const { count: bookmarkCount } = await supabase
+        .from('bookmarks')
+        .select('*', { count: 'exact', head: true })
+        .eq('article_id', page.id ?? '');
+      setBookmarksCount(bookmarkCount ?? 0);
     } catch (error) {
       // Ignore errors for non-existent records
     }
@@ -102,16 +114,21 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
         await supabase
           .from('likes')
           .delete()
-          .eq('user_id', user!.id)
-          .eq('article_id', page.id);
-        setLikesCount(prev => prev - 1);
+          .eq('user_id', user?.id ?? '')
+          .eq('article_id', page.id ?? '');
+        setIsLiked(false);
       } else {
         await supabase
           .from('likes')
-          .insert({ user_id: user!.id as string, article_id: page.id });
-        setLikesCount(prev => prev + 1);
+          .insert({ user_id: user?.id ?? '', article_id: page.id ?? '' });
+        setIsLiked(true);
       }
-      setIsLiked(!isLiked);
+      // Fetch updated like count
+      const { count: likeCount } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('article_id', page.id ?? '');
+      setLikesCount(likeCount ?? 0);
     } catch (error) {
       toast({
         title: "Error",
@@ -136,16 +153,21 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
         await supabase
           .from('bookmarks')
           .delete()
-          .eq('user_id', user!.id)
-          .eq('article_id', page.id);
-        setBookmarksCount(prev => prev - 1);
+          .eq('user_id', user?.id ?? '')
+          .eq('article_id', page.id ?? '');
+        setIsBookmarked(false);
       } else {
         await supabase
           .from('bookmarks')
-          .insert({ user_id: user!.id as string, article_id: page.id });
-        setBookmarksCount(prev => prev + 1);
+          .insert({ user_id: user?.id ?? '', article_id: page.id ?? '' });
+        setIsBookmarked(true);
       }
-      setIsBookmarked(!isBookmarked);
+      // Fetch updated bookmark count
+      const { count: bookmarkCount } = await supabase
+        .from('bookmarks')
+        .select('*', { count: 'exact', head: true })
+        .eq('article_id', page.id ?? '');
+      setBookmarksCount(bookmarkCount ?? 0);
     } catch (error) {
       toast({
         title: "Error",
@@ -177,7 +199,7 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${page.title.replace(/[^a-z0-9-_]+/gi, '_')}.json`;
+  a.download = `${(page.title ?? 'Untitled').replace(/[^a-z0-9-_]+/gi, '_')}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -239,7 +261,7 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
         <div className="overflow-hidden" style={{ height: '9rem' }}>
           <img
             src={page.cover_image_url}
-            alt={page.title}
+            alt={page.title ?? undefined}
             className="w-full h-full object-cover hover:scale-105 transition-smooth"
           />
         </div>
@@ -248,39 +270,38 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
       <CardHeader className="pb-3">
         <div className="flex items-center space-x-3 mb-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={page.profiles.avatar_url} />
+            <AvatarImage src={page.profiles.avatar_url ?? ''} />
             <AvatarFallback>
-              {page.profiles.display_name?.charAt(0) || page.profiles.username?.charAt(0)}
+              {(page.profiles.display_name ?? page.profiles.username ?? 'U').charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium text-foreground">
-                {page.profiles.display_name || page.profiles.username}
+                {page.profiles.display_name ?? page.profiles.username ?? 'Unknown'}
               </p>
-              <UserLevelBadge userId={page.profiles.user_id} />
             </div>
             <p className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(page.published_at))} ago
+              {page.published_at ? formatDistanceToNow(new Date(page.published_at)) : 'Unknown'} ago
               {page.reading_time && ` · ${page.reading_time} min read`}
             </p>
           </div>
           {showOwnerMenu && (
             <OwnerMenu
-              onEdit={() => onEdit?.(page.id)}
-              onArchive={() => onArchive?.(page.id)}
-              onDelete={() => onDelete?.(page.id)}
+              onEdit={() => onEdit?.(page.id ?? '')}
+              onArchive={() => onArchive?.(page.id ?? '')}
+              onDelete={() => onDelete?.(page.id ?? '')}
             />
           )}
         </div>
         
-        <Link to={`/page/${page.id}${location.pathname === '/archive' ? '?from=archive' : ''}`} className="group">
+        <Link to={`/page/${page.id ?? ''}${location.pathname === '/archive' ? '?from=archive' : ''}`} className="group">
           <h3 className="text-xl font-bold line-clamp-2 group-hover:text-primary transition-colors">
-            {page.title}
+            {page.title ?? 'Untitled'}
           </h3>
           {page.subtitle && (
             <p className="text-muted-foreground line-clamp-2 mt-1">
-              {page.subtitle}
+              {page.subtitle ?? ''}
             </p>
           )}
         </Link>
@@ -289,9 +310,9 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
       <CardContent className="pt-0">
         {page.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {page.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
+            {page.tags.slice(0, 3).map((tag, idx) => (
+              <Badge key={String(tag ?? idx)} variant="secondary" className="text-xs">
+                {tag ?? ''}
               </Badge>
             ))}
           </div>
@@ -314,9 +335,9 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
               variant="ghost"
               size="sm"
               onClick={handleLike}
-              className={isLiked ? "text-red-500" : ""}
+              className="bg-transparent"
             >
-              <Heart className={`h-4 w-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
+              <Heart className={`h-4 w-4 mr-1 ${isLiked ? "fill-current text-red-500" : ""}`} />
               {likesCount}
             </Button>
             
@@ -325,9 +346,9 @@ export function PageCard({ page, showBookmark = true, showOwnerMenu = false, onE
                 variant="ghost"
                 size="sm"
                 onClick={handleBookmark}
-                className={isBookmarked ? "text-primary" : ""}
+                className="bg-transparent"
               >
-                <Bookmark className={`h-4 w-4 mr-1 ${isBookmarked ? "fill-current" : ""}`} />
+                <Bookmark className={`h-4 w-4 mr-1 ${isBookmarked ? "fill-current text-primary" : ""}`} />
                 {bookmarksCount}
               </Button>
             )}

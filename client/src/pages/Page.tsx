@@ -13,6 +13,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CommentSection } from '@/components/CommentSection';
 import { BackButton } from '@/components/BackButton';
+import CodePreview from '@/components/CodePreview';
+import MentionedHtml from '@/components/MentionedHtml';
 // Removed html2canvas and PDF-related code; replaced with Report option
 import {
   DropdownMenu,
@@ -489,7 +491,11 @@ export default function Page() {
     switch (block.type) {
       case 'text':
         return (
-          <div key={index} className="mb-6" dangerouslySetInnerHTML={{ __html: block.content }} />
+          <div key={index} className="mb-6">
+            <div className="prose prose-lg max-w-none" >
+              <MentionedHtml html={block.content} />
+            </div>
+          </div>
         );
       case 'image':
         return (
@@ -630,12 +636,8 @@ export default function Page() {
         );
       case 'code':
         return (
-          <div key={index} className="mb-6">
-            <pre className="bg-muted p-4 rounded-lg overflow-auto max-h-[75svh]">
-              <code className={`language-${block.content.language}`}>
-                {block.content.code}
-              </code>
-            </pre>
+          <div key={index}>
+            <CodePreview code={block.content.code ?? ''} language={block.content.language} label={block.content.label ?? undefined} collapseLines={15} />
           </div>
         );
       case 'table':
@@ -757,8 +759,8 @@ export default function Page() {
       
       {/* Page Header */}
       <header className="mb-8">
-        {/* Author Info */}
-        <div className="flex items-center justify-between mb-6">
+  {/* Author Info */}
+  <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-12 w-12">
               <AvatarImage src={page.profiles.avatar_url ?? ''} />
@@ -804,7 +806,9 @@ export default function Page() {
               )}
             </Button>
           )}
-        </div>
+  </div>
+
+  <Separator className="my-6" />
         {/* Cover Image above Title (3:1) */}
         {page.cover_image_url && (
           <div className="mb-6 overflow-hidden rounded-lg" style={{ aspectRatio: '3 / 1' }}>

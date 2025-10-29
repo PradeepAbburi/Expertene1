@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,10 +36,9 @@ interface Creator {
 
 interface RoomsListProps {
   userCreator: Creator | null;
-  userSubscriptions: string[];
 }
 
-export function RoomsList({ userCreator, userSubscriptions }: RoomsListProps) {
+export function RoomsList({ userCreator }: RoomsListProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -53,14 +52,12 @@ export function RoomsList({ userCreator, userSubscriptions }: RoomsListProps) {
 
   useEffect(() => {
     fetchRooms();
-  }, [userSubscriptions]);
+  }, []);
 
   const fetchRooms = async () => {
     try {
-      // Fetch rooms for subscribed creators or user's own rooms
-      const creatorIds = userCreator ? [...userSubscriptions, userCreator.user_id] : userSubscriptions;
-      
-      if (creatorIds.length === 0) {
+      // Fetch all rooms for user's own creator id only
+      if (!userCreator || !userCreator.user_id) {
         setLoading(false);
         return;
       }
@@ -77,7 +74,7 @@ export function RoomsList({ userCreator, userSubscriptions }: RoomsListProps) {
             )
           )
         `)
-        .in('creator_id', creatorIds)
+        .eq('creator_id', userCreator.user_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -276,7 +273,7 @@ export function RoomsList({ userCreator, userSubscriptions }: RoomsListProps) {
                     </CardTitle>
                     <div className="flex items-center gap-2 mt-1">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={room.creators.profiles.avatar_url} />
+                        <AvatarImage src={room.creators.profiles.avatar_url ?? undefined} />
                         <AvatarFallback>
                           {room.creators.profiles.display_name?.[0] || 'C'}
                         </AvatarFallback>
@@ -300,14 +297,14 @@ export function RoomsList({ userCreator, userSubscriptions }: RoomsListProps) {
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
                   <span>
-                    Created {formatDistanceToNow(new Date(room.created_at), { addSuffix: true })}
+                    Created {room.created_at ? formatDistanceToNow(new Date(room.created_at), { addSuffix: true }) : 'Unknown'}
                   </span>
                 </div>
 
                 <Button 
                   size="sm" 
                   className="w-full"
-                  onClick={() => joinRoom(room.id)}
+                  onClick={() => joinRoom(room.id ?? '')}
                   disabled={room.current_members >= room.max_members}
                 >
                   {room.current_members >= room.max_members ? 'Room Full' : 'Join Room'}
