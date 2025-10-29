@@ -59,6 +59,8 @@ export function useAuth() {
     }
   };
 
+   //sample comment
+
   const refreshProfile = () => {
     if (user) {
       fetchProfile(user.id);
