@@ -39,24 +39,32 @@ export function Layout({ children }: LayoutProps) {
   const [navLoading, setNavLoading] = useState(false);
 
   // Minimum navigation loading time (ms), configurable via VITE_NAV_LOADING_MS.
-  const NAV_MIN_MS = Number((import.meta as any).env?.VITE_NAV_LOADING_MS ?? ((import.meta as any).env?.DEV ? 1200 : 0));
+  // Default to a visible delay across devices so the "Opening editor..." message is seen.
+  const NAV_MIN_MS = Number((import.meta as any).env?.VITE_NAV_LOADING_MS ?? 800);
+  // Optional additional wait after navigation to allow the editor to mount visibly
+  const NAV_POST_MS = 300;
 
   const handleDelayedNav = async (path: string) => {
     // if already loading or already on target, no-op
     if (navLoading || location.pathname === path) return;
     setNavLoading(true);
-    const start = Date.now();
+
     try {
-      // allow a small delay before navigating to give the loading effect
-      const elapsed = Date.now() - start;
-      if (NAV_MIN_MS > elapsed) {
-        await new Promise((res) => setTimeout(res, NAV_MIN_MS - elapsed));
-      }
+      // wait at least NAV_MIN_MS so users see the opening message
+      await new Promise((res) => setTimeout(res, NAV_MIN_MS));
     } catch (e) {
       // ignore
     }
-    setNavLoading(false);
+
+    // Navigate while keeping the overlay visible; hide it shortly after to
+    // allow the editor page to render under the overlay for a smooth transition.
     navigate(path);
+
+    try {
+      await new Promise((res) => setTimeout(res, NAV_POST_MS));
+    } catch (e) {}
+
+    setNavLoading(false);
   };
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/auth';
