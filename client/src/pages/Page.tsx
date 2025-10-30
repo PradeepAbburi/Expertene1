@@ -59,13 +59,14 @@ interface PageData {
 }
 
 export default function Page() {
-  const { id } = useParams<{ id: string }>();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { id, token: routeToken } = useParams<{ id?: string; token?: string }>();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { trackArticleView, trackArticleLike, trackArticleBookmark } = useAnalytics();
   const [searchParams] = useSearchParams();
-  const shareToken = searchParams.get('token');
+  // share token can come either from query ?token=... or from the route /shared/:token
+  const shareToken = searchParams.get('token') || routeToken || null;
   const from = searchParams.get('from');
   const [page, setPage] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,38 +85,74 @@ export default function Page() {
     if (!id && !shareToken) return;
     setLoading(true);
     try {
-      if (!id) throw new Error('Missing page id');
-      const { data, error } = await supabase
-        .from('articles')
-        .select(`
-          id,
-          title,
-          subtitle,
-          content,
-          cover_image_url,
-          reading_time,
-          likes_count,
-          bookmarks_count,
-          views_count,
-          comments_count,
-          published_at,
-          tags,
-          author_id,
-          profiles:profiles(
-            username,
-            display_name,
-            avatar_url,
-            bio,
-            followers_count
-          )
-        `)
-        .eq('id', id)
-        .single();
+      // If we have a share token but no id, lookup the article by share_token
+      if (!id && shareToken) {
+        const { data, error } = await supabase
+          .from('articles')
+          .select(`
+            id,
+            title,
+            subtitle,
+            content,
+            cover_image_url,
+            reading_time,
+            likes_count,
+            bookmarks_count,
+            views_count,
+            comments_count,
+            published_at,
+            tags,
+            author_id,
+            profiles:profiles(
+              username,
+              display_name,
+              avatar_url,
+              bio,
+              followers_count
+            )
+          `)
+          .eq('share_token', shareToken)
+          .single();
 
-      if (error) throw error;
-      if (!data) throw new Error('Page not found');
+        if (error) throw error;
+        if (!data) throw new Error('Page not found');
 
-      setPage(data as PageData);
+        setPage(data as PageData);
+        // set id local variable-like behaviour by not relying on param further
+      } else {
+        if (!id) throw new Error('Missing page id');
+        const { data, error } = await supabase
+          .from('articles')
+          .select(`
+            id,
+            title,
+            subtitle,
+            content,
+            cover_image_url,
+            reading_time,
+            likes_count,
+            bookmarks_count,
+            views_count,
+            comments_count,
+            published_at,
+            tags,
+            author_id,
+            profiles:profiles(
+              username,
+              display_name,
+              avatar_url,
+              bio,
+              followers_count
+            )
+          `)
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('Page not found');
+
+        setPage(data as PageData);
+      }
 
       // Increment views once immediately after loading the page.
       try {
@@ -176,8 +213,22 @@ export default function Page() {
       } catch (e) {
         console.error('Error incrementing views in fetchPage:', e);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching page:', error);
+      // If this was a shared-token access and the user is not authenticated,
+      // prompt them to sign in and preserve the return URL so they come back here.
+      const currentUrl = window.location.pathname + window.location.search;
+      if (shareToken) {
+        if (!isAuthenticated) {
+          navigate(`/auth?returnTo=${encodeURIComponent(currentUrl)}`);
+          return;
+        } else {
+          // If they're signed in but still can't access via the token, take them to their profile/layout
+          navigate('/profile');
+          return;
+        }
+      }
+
       toast({
         title: 'Error',
         description: "Failed to load page or you don't have permission to view it.",
@@ -189,21 +240,11 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (!id && !shareToken) return;
-
-    // If auth state is known and user is not authenticated,
-    // redirect to the auth page and preserve the original URL so
-    // the visitor can sign up / login and be returned to this page.
-    if (!authLoading && !isAuthenticated) {
-      const current = window.location.pathname + window.location.search;
-      navigate(`/auth?redirect=${encodeURIComponent(current)}`);
-      return;
+    if (id || shareToken) {
+      fetchPage();
+      if (id) trackArticleView(id);
     }
-
-    // Otherwise fetch the page normally.
-    fetchPage();
-    if (id) trackArticleView(id);
-  }, [id, shareToken, authLoading, isAuthenticated, navigate]);
+  }, [id, shareToken]);
 
   
 
@@ -726,8 +767,8 @@ export default function Page() {
   }
 
   return (
-  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-0">
-    <div className="flex items-center justify-between mb-4">
+  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-0">
+      <div className="flex items-center justify-between mb-6">
         <BackButton to={from === 'archive' ? '/archive' : undefined} />
         <div className="flex items-center gap-2">
           <Button
@@ -830,7 +871,7 @@ export default function Page() {
           </div>
         )}
 
-  <h1 className="text-4xl font-bold mb-2">{page.title}</h1>
+        <h1 className="text-4xl font-bold mb-4">{page.title}</h1>
         {page.subtitle && (
           <p className="text-xl text-muted-foreground mb-6">{page.subtitle}</p>
         )}
