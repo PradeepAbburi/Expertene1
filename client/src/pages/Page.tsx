@@ -121,7 +121,17 @@ export default function Page() {
         if (!data) throw new Error('Page not found');
 
         fetched = data;
-        setPage(data as PageData);
+        // ensure profiles exists (author row could have been deleted)
+        if (!fetched.profiles) {
+          fetched.profiles = {
+            username: null,
+            display_name: 'Deleted user',
+            avatar_url: undefined,
+            bio: undefined,
+            followers_count: 0,
+          };
+        }
+        setPage(fetched as PageData);
         // set id local variable-like behaviour by not relying on param further
       } else {
         if (!id) throw new Error('Missing page id');
@@ -152,11 +162,61 @@ export default function Page() {
           .eq('id', id)
           .single();
 
-        if (error) throw error;
-        if (!data) throw new Error('Page not found');
+        if (error) {
+          // If the join with profiles fails due to RLS or missing profiles,
+          // try a minimal fetch without the profiles join as a fallback so
+          // pages whose authors were removed still render a public preview.
+          try {
+            const { data: minimal, error: minErr } = await supabase
+              .from('articles')
+              .select(`
+                id,
+                title,
+                subtitle,
+                content,
+                cover_image_url,
+                reading_time,
+                likes_count,
+                bookmarks_count,
+                views_count,
+                comments_count,
+                published_at,
+                tags,
+                author_id
+              `)
+              .eq('id', id)
+              .single();
 
-        fetched = data;
-        setPage(data as PageData);
+            if (minErr || !minimal) throw error;
+
+            fetched = minimal as any;
+            // provide placeholder profile when author row no longer exists
+            fetched.profiles = {
+              username: null,
+              display_name: 'Deleted user',
+              avatar_url: undefined,
+              bio: undefined,
+              followers_count: 0,
+            };
+            setPage(fetched as PageData);
+          } catch (fallbackErr) {
+            throw error;
+          }
+        } else {
+          if (!data) throw new Error('Page not found');
+
+          fetched = data;
+          if (!fetched.profiles) {
+            fetched.profiles = {
+              username: null,
+              display_name: 'Deleted user',
+              avatar_url: undefined,
+              bio: undefined,
+              followers_count: 0,
+            };
+          }
+          setPage(data as PageData);
+        }
       }
 
       // Increment views once immediately after loading the page.
