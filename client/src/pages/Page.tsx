@@ -85,8 +85,10 @@ export default function Page() {
     if (!id && !shareToken) return;
     setLoading(true);
     try {
+      // temporary holder for the fetched article so the increment logic below
+      // can reference the same object regardless of which branch fetched it
+      let fetched: any = null;
       // If we have a share token but no id, lookup the article by share_token
-      let articleData: any = null;
       if (!id && shareToken) {
         const { data, error } = await supabase
           .from('articles')
@@ -118,7 +120,7 @@ export default function Page() {
         if (error) throw error;
         if (!data) throw new Error('Page not found');
 
-        articleData = data;
+        fetched = data;
         setPage(data as PageData);
         // set id local variable-like behaviour by not relying on param further
       } else {
@@ -153,7 +155,7 @@ export default function Page() {
         if (error) throw error;
         if (!data) throw new Error('Page not found');
 
-        articleData = data;
+        fetched = data;
         setPage(data as PageData);
       }
 
@@ -163,30 +165,30 @@ export default function Page() {
         if (!runOnceRef.current) {
           // Debounce via sessionStorage: if we incremented this article very
           // recently (e.g. due to dev double-mount), skip the increment.
-          const storageKey = `last_view_increment_${articleData?.id ?? id}`;
+          const storageKey = `last_view_increment_${fetched?.id}`;
           let last: string | null = null;
           try { last = sessionStorage.getItem(storageKey); } catch {}
           const now = Date.now();
           const debounceMs = 5000; // 5 seconds
 
           if (last && (now - Number(last) < debounceMs)) {
-            console.debug('[views] skipping increment due to recent increment', { id: articleData?.id ?? id });
+            console.debug('[views] skipping increment due to recent increment', { id: fetched?.id });
             runOnceRef.current = true;
           } else {
             runOnceRef.current = true;
             // Mark that an increment has started for this tab immediately
             try { sessionStorage.setItem(storageKey, String(now)); } catch {}
-            const articleIdForRpc = articleData?.id ?? id;
-            const { error: rpcError } = await supabase.rpc('increment_article_views', { article_id_param: articleIdForRpc });
+
+            const { error: rpcError } = await supabase.rpc('increment_article_views', { article_id_param: fetched?.id });
             if (rpcError) {
               console.error('RPC increment_article_views error in fetchPage:', rpcError);
               // Fallback: try direct update
               try {
-                const newViews = Number(articleData?.views_count ?? 0) + 1;
+                const newViews = Number(fetched?.views_count ?? 0) + 1;
                 const { error: updErr } = await supabase
                   .from('articles')
                   .update({ views_count: newViews })
-                  .eq('id', articleIdForRpc);
+                  .eq('id', fetched?.id);
                 if (!updErr) {
                   setPage(prev => prev ? { ...prev, views_count: newViews } : prev);
                 } else {
@@ -201,7 +203,7 @@ export default function Page() {
                 const { data: refreshed, error: selectError } = await supabase
                   .from('articles')
                   .select('views_count')
-                  .eq('id', articleData?.id ?? id)
+                  .eq('id', fetched?.id)
                   .single();
                 if (!selectError && refreshed) {
                   setPage(prev => prev ? { ...prev, views_count: Number(refreshed.views_count ?? prev.views_count) } : prev);
