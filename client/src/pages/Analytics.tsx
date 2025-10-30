@@ -161,8 +161,9 @@ export default function Analytics() {
   };
 
   const openBoostDialog = (article: Article) => {
-    setSelectedArticle(article);
-    setShowBoostDialog(true);
+    // Temporarily replace the full boost flow with a Coming Soon message until
+    // the feature is ready. This avoids exposing payment/activation paths.
+    toast({ title: 'Coming soon', description: 'Boosting posts will be available soon.' });
   };
 
   const openPostDetails = (article: Article) => {

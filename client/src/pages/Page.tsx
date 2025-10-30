@@ -60,7 +60,7 @@ interface PageData {
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { trackArticleView, trackArticleLike, trackArticleBookmark } = useAnalytics();
@@ -189,11 +189,21 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (id || shareToken) {
-      fetchPage();
-      if (id) trackArticleView(id);
+    if (!id && !shareToken) return;
+
+    // If auth state is known and user is not authenticated,
+    // redirect to the auth page and preserve the original URL so
+    // the visitor can sign up / login and be returned to this page.
+    if (!authLoading && !isAuthenticated) {
+      const current = window.location.pathname + window.location.search;
+      navigate(`/auth?redirect=${encodeURIComponent(current)}`);
+      return;
     }
-  }, [id, shareToken]);
+
+    // Otherwise fetch the page normally.
+    fetchPage();
+    if (id) trackArticleView(id);
+  }, [id, shareToken, authLoading, isAuthenticated, navigate]);
 
   
 
@@ -716,8 +726,8 @@ export default function Page() {
   }
 
   return (
-  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-0">
-      <div className="flex items-center justify-between mb-6">
+  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-0">
+    <div className="flex items-center justify-between mb-4">
         <BackButton to={from === 'archive' ? '/archive' : undefined} />
         <div className="flex items-center gap-2">
           <Button
@@ -820,7 +830,7 @@ export default function Page() {
           </div>
         )}
 
-        <h1 className="text-4xl font-bold mb-4">{page.title}</h1>
+  <h1 className="text-4xl font-bold mb-2">{page.title}</h1>
         {page.subtitle && (
           <p className="text-xl text-muted-foreground mb-6">{page.subtitle}</p>
         )}

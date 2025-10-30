@@ -318,8 +318,8 @@ export default function CreatePage() {
       <div className="sticky top-28 sm:top-14 z-40 bg-background border-b shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="hidden sm:inline-flex">
+              <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="inline-flex">
                 ← Back
               </Button>
               <div className="text-sm text-muted-foreground hidden sm:block">

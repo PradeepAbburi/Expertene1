@@ -66,11 +66,21 @@ export default function Auth() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
+  // preserve redirect target from query params (e.g. /auth?redirect=/page/abc)
+  const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const redirectTarget = urlParams.get('redirect') || '';
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/feed');
+      // If a redirect target was provided, navigate there after auth.
+      try {
+        const dest = redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/feed';
+        navigate(dest);
+      } catch (err) {
+        navigate('/feed');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, redirectTarget]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,7 +186,9 @@ export default function Auth() {
 
       if (error) throw error;
 
-      navigate('/feed');
+      // after successful sign in, navigate to redirect target if provided
+      const dest = redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/feed';
+      navigate(dest);
     } catch (error: any) {
       toast({
         title: "Error",
