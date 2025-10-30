@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { checkAndUpdateStreak } from '@/lib/streak';
 
 interface CreateCommunityPostProps {
@@ -23,12 +24,15 @@ export function CreateCommunityPost({ userSubscriptions, onClose, onPostCreated 
   const [content, setContent] = useState('');
   const [selectedCreator, setSelectedCreator] = useState('');
   const [loading, setLoading] = useState(false);
+  // Minimum visible loading time (ms). In development default to 1500ms so skeleton is visible.
+  const MIN_LOADING_MS = Number((import.meta as any).env?.VITE_MIN_LOADING_MS ?? ((import.meta as any).env?.DEV ? 1500 : 0));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || !selectedCreator) return;
 
-    setLoading(true);
+  const start = Date.now();
+  setLoading(true);
     try {
       const { error } = await supabase
         .from('community_posts')
@@ -79,6 +83,15 @@ export function CreateCommunityPost({ userSubscriptions, onClose, onPostCreated 
         variant: "destructive",
       });
     } finally {
+      // ensure minimum visible loading time so skeleton/loading animation is noticeable
+      try {
+        const elapsed = Date.now() - start;
+        if (MIN_LOADING_MS > elapsed) {
+          await new Promise((res) => setTimeout(res, MIN_LOADING_MS - elapsed));
+        }
+      } catch (e) {
+        // ignore
+      }
       setLoading(false);
     }
   };
@@ -143,7 +156,14 @@ export function CreateCommunityPost({ userSubscriptions, onClose, onPostCreated 
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !title.trim() || !content.trim() || !selectedCreator}>
-              {loading ? 'Creating...' : 'Create Post'}
+              {loading ? (
+                <span className="flex items-center">
+                  <LoadingSpinner className="mr-2" />
+                  Creating...
+                </span>
+              ) : (
+                'Create Post'
+              )}
             </Button>
           </div>
         </form>

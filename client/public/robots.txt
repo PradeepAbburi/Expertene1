@@ -1,2 +1,2 @@
 
-Sitemap: https://expertene.com/sitemap.xml
+Sitemap: https://expertene.tech/sitemap.xml

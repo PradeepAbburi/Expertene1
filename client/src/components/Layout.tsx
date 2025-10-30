@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,7 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { LeftSidebar } from '@/components/LeftSidebar';
 import { RightSidebar } from '@/components/RightSidebar';
 import { useEffect, useState } from 'react';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LayoutProps {
@@ -34,6 +35,29 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [streak, setStreak] = useState(0);
   const [sessionStart] = useState(Date.now());
+  const navigate = useNavigate();
+  const [navLoading, setNavLoading] = useState(false);
+
+  // Minimum navigation loading time (ms), configurable via VITE_NAV_LOADING_MS.
+  const NAV_MIN_MS = Number((import.meta as any).env?.VITE_NAV_LOADING_MS ?? ((import.meta as any).env?.DEV ? 1200 : 0));
+
+  const handleDelayedNav = async (path: string) => {
+    // if already loading or already on target, no-op
+    if (navLoading || location.pathname === path) return;
+    setNavLoading(true);
+    const start = Date.now();
+    try {
+      // allow a small delay before navigating to give the loading effect
+      const elapsed = Date.now() - start;
+      if (NAV_MIN_MS > elapsed) {
+        await new Promise((res) => setTimeout(res, NAV_MIN_MS - elapsed));
+      }
+    } catch (e) {
+      // ignore
+    }
+    setNavLoading(false);
+    navigate(path);
+  };
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/auth';
   // Only show sidebars on feed page
@@ -180,6 +204,15 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Navigation loading overlay shown when user clicks Write and we delay navigation */}
+      {navLoading && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/90 backdrop-blur">
+          <div className="flex flex-col items-center gap-4">
+            <LoadingSpinner className="text-primary" />
+            <div className="text-lg font-medium">Opening editor...</div>
+          </div>
+        </div>
+      )}
       {/* Fixed Navbar */}
       <header className={`fixed top-0 left-0 right-0 z-50 w-full border-b ${isAuthRoute ? 'bg-background' : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}`}>
         <div className="container flex h-14 items-center justify-between gap-4">
@@ -204,10 +237,10 @@ export function Layout({ children }: LayoutProps) {
                   </Badge>
                 </Link>
                 <Button asChild variant="ghost" size="sm" className="hidden sm:flex">
-                  <Link to="/create">
+                  <button type="button" onClick={() => handleDelayedNav('/create')} className="flex items-center">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Write
-                  </Link>
+                  </button>
                 </Button>
                 {/* Logout in navbar only on admin routes */}
                 {isAdminRoute && (
@@ -247,11 +280,11 @@ export function Layout({ children }: LayoutProps) {
         <div className="fixed top-[56px] left-0 right-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:hidden">
           <div className="container flex h-14 items-center gap-4 px-4">
             <SearchBar />
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/create">
-                <PlusCircle className="h-4 w-4" />
-              </Link>
-            </Button>
+              <Button asChild variant="ghost" size="sm">
+                <button type="button" onClick={() => handleDelayedNav('/create')} className="flex items-center">
+                  <PlusCircle className="h-4 w-4" />
+                </button>
+              </Button>
           </div>
         </div>
       )}
