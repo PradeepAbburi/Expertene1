@@ -137,33 +137,16 @@ export default function Analytics() {
     };
   }, [user]);
 
+  // Boosting is not available yet in production — show a coming soon notice.
   const handleBoost = async () => {
-    if (!selectedArticle) return;
-
-    const totalCost = dailyBudget * boostDuration;
-
-    // Activate boost locally
-    const now = Date.now();
-    const endAt = now + boostDuration * 24 * 60 * 60 * 1000;
-    const newBoost: ActiveBoost = { startedAt: now, endAt, dailyBudget };
-    setActiveBoosts((prev) => {
-      const next = { ...prev, [selectedArticle.id]: newBoost };
-      localStorage.setItem('activeBoosts:v1', JSON.stringify(next));
-      return next;
-    });
-
-    toast({
-      title: 'Boost Activated!',
-      description: `Your post will be boosted for ${boostDuration} days at ₹${dailyBudget}/day. Total: ₹${totalCost}`,
-    });
-
+    toast({ title: 'Coming soon', description: 'Boosting posts is coming soon — stay tuned!' });
     setShowBoostDialog(false);
   };
 
   const openBoostDialog = (article: Article) => {
-    // Temporarily replace the full boost flow with a Coming Soon message until
-    // the feature is ready. This avoids exposing payment/activation paths.
-    toast({ title: 'Coming soon', description: 'Boosting posts will be available soon.' });
+    // Replace the full boost flow with a coming-soon notice
+    setSelectedArticle(article);
+    toast({ title: 'Coming soon', description: 'Boosting posts is coming soon — stay tuned!' });
   };
 
   const openPostDetails = (article: Article) => {
@@ -380,11 +363,9 @@ export default function Analytics() {
                           size="sm"
                           onClick={() => openBoostDialog(article)}
                           className="whitespace-nowrap flex-1 sm:flex-none"
-                          disabled={!!activeBoosts[article.id] && activeBoosts[article.id].endAt > Date.now()}
-                          variant={activeBoosts[article.id] && activeBoosts[article.id].endAt > Date.now() ? 'outline' : 'default'}
                         >
                           <Zap className="h-4 w-4 mr-2" />
-                          {activeBoosts[article.id] && activeBoosts[article.id].endAt > Date.now() ? 'Active' : 'Boost'}
+                          Boost
                         </Button>
                         <Button
                           size="sm"
@@ -715,7 +696,7 @@ export default function Analytics() {
                   className="flex-1 gap-2"
                   onClick={() => {
                     setShowPostDetailsDialog(false);
-                    openBoostDialog(selectedArticle);
+                    toast({ title: 'Coming soon', description: 'Boosting posts is coming soon — stay tuned!' });
                   }}
                 >
                   <Zap className="h-4 w-4" />

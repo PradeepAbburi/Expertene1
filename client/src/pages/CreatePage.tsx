@@ -51,7 +51,8 @@ export default function CreatePage() {
         {
           id: `block-${Date.now()}-${Math.random()}`,
           type: 'spacer' as Block['type'],
-          content: { height: 24 },
+          // reduce initial spacer height so title and first block are closer
+          content: { height: 8 },
         },
       ]);
       // editor ready for new page
