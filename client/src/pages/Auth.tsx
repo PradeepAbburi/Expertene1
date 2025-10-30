@@ -15,18 +15,30 @@ export default function Auth() {
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  // Functions base: prefer env override, otherwise use local Supabase Functions during dev
+  const _envBase = (import.meta as any).env?.VITE_FUNCTIONS_BASE;
+  const FUNCTIONS_BASE = _envBase || ((import.meta as any).env?.DEV ? 'http://localhost:54321/functions/v1' : '/functions/v1');
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: window.location.origin + '/reset-password'
-      });
-      if (error) throw error;
-      toast({
-        title: 'Password Reset Email Sent',
-        description: 'Check your inbox for a reset link.',
-      });
+      // Use server-side send-reset-link function to email a reset link
+      let res;
+      try {
+        res = await fetch(`${FUNCTIONS_BASE}/send-reset-link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: forgotEmail }),
+        });
+      } catch (netErr: any) {
+        // network-level errors (e.g. CORS or functions not reachable)
+        toast({ title: 'Network error', description: 'Could not reach the functions endpoint. Make sure your functions are deployed or that VITE_FUNCTIONS_BASE is set correctly (for local dev use http://localhost:54321/functions/v1).', variant: 'destructive' });
+        throw netErr;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'failed_to_send_reset_link');
+      toast({ title: 'Reset link sent', description: 'Check your email for the password reset link.' });
       setShowForgot(false);
       setForgotEmail('');
     } catch (error: any) {
@@ -39,6 +51,8 @@ export default function Auth() {
       setForgotLoading(false);
     }
   };
+
+  
   const enableUsernameLogin = (import.meta as any).env?.VITE_ENABLE_USERNAME_LOGIN === 'true';
   const [email, setEmail] = useState('');
   const [identifier, setIdentifier] = useState(''); // username or email
@@ -180,6 +194,14 @@ export default function Auth() {
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 overflow-hidden">
       
       <div className="w-full h-screen grid grid-cols-1 lg:grid-cols-2 relative z-10">
+        {/* Grid boxes background behind form */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          backgroundImage: `repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 32px)`
+        }} />
         {/* Left: Hero/Branding - Hidden on mobile */}
         <div className="relative bg-gradient-to-br from-primary via-primary to-primary/90 p-8 lg:p-16 text-white hidden lg:flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utb3BhY2l0eT0iLjA1IiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PC9zdmc+')] opacity-20" />
@@ -232,7 +254,7 @@ export default function Auth() {
         </div>
 
         {/* Right: Auth Forms */}
-  <div className="p-6 lg:p-12 bg-black text-white flex items-center justify-center h-full rounded-none shadow-none">
+  <div className="p-6 lg:p-12 bg-black text-white flex items-center justify-center h-full rounded-none shadow-none relative z-10">
           <div className="w-full max-w-md">
             <div className="mb-6">
               <h2 className="text-3xl lg:text-4xl font-bold gradient-primary bg-clip-text text-transparent mb-2">Welcome back</h2>
@@ -411,6 +433,9 @@ export default function Auth() {
                   required
                 />
               </div>
+
+              <div className="text-sm text-muted-foreground">We'll send a password reset link to your email with instructions to choose a new password.</div>
+
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setShowForgot(false)}>
                   Cancel

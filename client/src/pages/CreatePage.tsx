@@ -27,6 +27,7 @@ export default function CreatePage() {
   const editId = searchParams.get('edit');
   
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [coverImage, setCoverImage] = useState('');
@@ -53,13 +54,19 @@ export default function CreatePage() {
           content: { height: 24 },
         },
       ]);
+      // editor ready for new page
+      setTimeout(() => setInitializing(false), 0);
     }
   }, [editId]);
 
   // Load existing page for editing
   useEffect(() => {
     if (editId && user) {
-      loadPageForEditing(editId);
+      (async () => {
+        setInitializing(true);
+        await loadPageForEditing(editId);
+        setInitializing(false);
+      })();
     }
   }, [editId, user]);
 
@@ -298,16 +305,21 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {initializing && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 rounded-full border-4 border-t-4 border-t-primary animate-spin" />
+            <div className="text-sm text-muted-foreground">Loading editor…</div>
+          </div>
+        </div>
+      )}
+      {/* Back button (placed inline in header for previous behavior) */}
       {/* Header - positioned below navbar on desktop, below navbar+searchbar on mobile */}
       <div className="sticky top-28 sm:top-14 z-40 bg-background border-b shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate(-1)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="hidden sm:inline-flex">
                 ← Back
               </Button>
               <div className="text-sm text-muted-foreground hidden sm:block">

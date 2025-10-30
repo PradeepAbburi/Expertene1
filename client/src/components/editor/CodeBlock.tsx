@@ -2,14 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Code as CodeIcon, Copy } from 'lucide-react';
+import { X, Code as CodeIcon, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import hljs from 'highlight.js';
-import { useEffect, useRef } from 'react';
+import CodePreview from '@/components/CodePreview';
+import { useState } from 'react';
 
 interface CodeContent {
   code: string | null | undefined;
   language: string | null | undefined;
+  label?: string | null | undefined;
 }
 
 interface CodeBlockProps {
@@ -46,14 +47,8 @@ const LANGUAGES = [
 ];
 
 export function CodeBlock({ content, onChange, onDelete }: CodeBlockProps) {
+  const [showPreview, setShowPreview] = useState(true);
   const { toast } = useToast();
-  const codeRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (codeRef.current && content.code) {
-      hljs.highlightElement(codeRef.current);
-    }
-  }, [content.code, content.language]);
 
   const handleCodeChange = (code: string) => {
     onChange({ ...content, code });
@@ -63,9 +58,13 @@ export function CodeBlock({ content, onChange, onDelete }: CodeBlockProps) {
     onChange({ ...content, language });
   };
 
+  const handleLabelChange = (label: string) => {
+    onChange({ ...content, label });
+  };
+
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(content.code);
+      await navigator.clipboard.writeText(content.code ?? '');
       toast({
         title: "Copied!",
         description: "Code copied to clipboard.",
@@ -86,15 +85,30 @@ export function CodeBlock({ content, onChange, onDelete }: CodeBlockProps) {
           <CodeIcon className="h-4 w-4" />
           Code Block
         </h4>
-        <Button variant="ghost" size="sm" onClick={onDelete}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setShowPreview((s) => !s)}>
+            {showPreview ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onDelete}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
+          <Label htmlFor="code-label">Label</Label>
+          <input
+            id="code-label"
+            value={content.label ?? ''}
+            onChange={(e) => handleLabelChange(e.target.value)}
+            placeholder="Optional name (e.g. Example, Output)"
+            className="w-full bg-transparent border border-border rounded px-2 py-1 text-sm"
+          />
+        </div>
+        <div>
           <Label htmlFor="language">Language</Label>
-          <Select value={content.language} onValueChange={handleLanguageChange}>
+          <Select value={content.language ?? undefined} onValueChange={handleLanguageChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select language" />
             </SelectTrigger>
@@ -122,7 +136,7 @@ export function CodeBlock({ content, onChange, onDelete }: CodeBlockProps) {
         <Label htmlFor="code">Code</Label>
         <Textarea
           id="code"
-          value={content.code}
+          value={content.code ?? ''}
           onChange={(e) => handleCodeChange(e.target.value)}
           placeholder="Enter your code here..."
           rows={8}
@@ -130,21 +144,10 @@ export function CodeBlock({ content, onChange, onDelete }: CodeBlockProps) {
         />
       </div>
 
-      {content.code && (
-        <div className="relative">
-          <div className="absolute top-2 right-2 z-10">
-            <Button variant="ghost" size="sm" onClick={copyToClipboard}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-          <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <code
-              ref={codeRef}
-              className={`language-${content.language}`}
-            >
-              {content.code}
-            </code>
-          </pre>
+      {content.code && showPreview && (
+        <div>
+          {/* Use the shared CodePreview so the write page matches the article preview exactly */}
+          <CodePreview code={content.code ?? ''} language={content.language ?? undefined} label={content.label ?? undefined} />
         </div>
       )}
     </div>

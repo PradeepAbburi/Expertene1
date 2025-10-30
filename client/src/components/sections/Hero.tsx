@@ -103,6 +103,7 @@ const Hero = () => {
             >
               <Link to="/about">Learn More</Link>
             </Button>
+            {/* Contact button removed per request */}
           </motion.div>
         </div>
       </div>

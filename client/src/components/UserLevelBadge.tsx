@@ -21,7 +21,7 @@ export function UserLevelBadge({ userId, className = "" }: UserLevelBadgeProps) 
       const { data } = await supabase
         .from('user_levels')
         .select('level')
-        .eq('user_id', userId)
+        .eq('user_id', userId ?? '')
         .single();
       
       setLevel(data?.level || 1);

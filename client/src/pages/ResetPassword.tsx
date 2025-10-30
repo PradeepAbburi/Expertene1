@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,19 @@ export default function ResetPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Compute functions base same as Auth.tsx: env override, dev defaults to local functions
+  const _envBase = (import.meta as any).env?.VITE_FUNCTIONS_BASE;
+  const FUNCTIONS_BASE = _envBase || ((import.meta as any).env?.DEV ? 'http://localhost:54321/functions/v1' : '/functions/v1');
+
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('token');
+    if (t) setResetToken(t);
+  }, [location.search]);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +39,33 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      setSuccess(true);
-      setTimeout(() => navigate('/auth'), 2000);
+      if (resetToken) {
+        // Use server-side complete-reset function to exchange the reset token for a password change
+        let res;
+        try {
+          res = await fetch(`${FUNCTIONS_BASE}/complete-reset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: resetToken, new_password: newPassword }),
+          });
+        } catch (netErr: any) {
+          setError('Network error: could not reach functions endpoint.');
+          throw netErr;
+        }
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(json?.error || 'Failed to complete password reset.');
+          throw new Error(json?.error || 'complete_reset_failed');
+        }
+        setSuccess(true);
+        setTimeout(() => navigate('/auth'), 2000);
+      } else {
+        // Fallback: update password for signed-in user
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        setSuccess(true);
+        setTimeout(() => navigate('/auth'), 2000);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to reset password.');
     } finally {

@@ -1,8 +1,11 @@
-@import './styles/globals.css';
 
+/* stylelint-disable */
+/* Ensure Tailwind's core directives are present so PostCSS/Tailwind can process project @layer rules. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './styles/globals.css';
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
@@ -132,14 +135,21 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border;
+    /* Approximation of Tailwind's border-border utility */
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    /* Approximate of: bg-background text-foreground font-sans antialiased */
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -255,4 +265,53 @@ All colors MUST be HSL.
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
   }
+}
+
+/* highlight.js token color overrides to better match the site theme */
+.hljs {
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Keywords: use primary teal for stronger visibility */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst,
+.hljs-title,
+.hljs-name {
+  color: hsl(var(--primary)) !important;
+  font-weight: 600;
+}
+
+/* Strings: warmer / orange-ish */
+.hljs-string,
+.hljs-meta .hljs-string,
+.hljs-regexp {
+  color: #f59e0b !important; /* amber-500 */
+}
+
+/* Functions / builtins */
+.hljs-built_in,
+.hljs-function,
+.hljs-type {
+  color: #60a5fa !important; /* sky-400 */
+}
+
+/* Comments muted */
+.hljs-comment,
+.hljs-quote {
+  color: hsl(var(--muted-foreground)) !important;
+  font-style: italic;
+}
+
+/* Numbers and literals */
+.hljs-number,
+.hljs-literal,
+.hljs-bullet {
+  color: #f97316 !important; /* orange-500 */
+}
+
+/* Make punctuation slightly dim */
+.hljs-punctuation {
+  color: hsl(var(--border)) !important;
 }

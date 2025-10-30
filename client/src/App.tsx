@@ -8,6 +8,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ExpNotebook from "./pages/ExpNotebook";
 import About from "./pages/About";
+import AboutOverview from "./pages/about/AboutOverview";
+import AboutFeatures from "./pages/about/Features";
+import AboutQuickStart from "./pages/about/QuickStart";
+import AboutBestPractices from "./pages/about/BestPractices";
+import AboutFAQ from "./pages/about/FAQ";
+import AboutSupport from "./pages/about/Support";
+import FoundingTeam from "./pages/about/FoundingTeam";
 import APIPage from "./pages/API";
 import Careers from "./pages/Careers";
 import Contact from "./pages/Contact";
@@ -28,6 +35,7 @@ import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import Offline from "./pages/Offline";
 import { useOnline } from "./hooks/useOnline";
+import { supabase } from '@/integrations/supabase/client';
 import Admin from "./pages/Admin";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminLeaderboards from "./pages/admin/AdminLeaderboards";
@@ -52,6 +60,24 @@ export default function App() {
     setIsLoggedIn(!!token);
   }, []);
 
+  // keep isLoggedIn in sync with supabase auth state (so signing out updates layout)
+  React.useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session?.user);
+      try {
+        if (session?.access_token) {
+          localStorage.setItem('auth_token', session.access_token);
+        } else {
+          localStorage.removeItem('auth_token');
+        }
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -63,6 +89,15 @@ export default function App() {
               <Layout>
                 <Routes>
                   <Route path="/feed" element={<Feed />} />
+                  <Route path="/about" element={<About />}>
+                    <Route index element={<AboutOverview />} />
+                    <Route path="features" element={<AboutFeatures />} />
+                    <Route path="quick-start" element={<AboutQuickStart />} />
+                    <Route path="best-practices" element={<AboutBestPractices />} />
+                    <Route path="faq" element={<AboutFAQ />} />
+                    <Route path="support" element={<AboutSupport />} />
+                    <Route path="founding-team" element={<FoundingTeam />} />
+                  </Route>
                   <Route path="/create" element={<CreatePage />} />
                   <Route path="/page/:id" element={<Page />} />
                   <Route path="/shared/:token" element={<Page />} />
@@ -91,9 +126,17 @@ export default function App() {
               </Layout>
             ) : (
               <Layout>
-                <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/about" element={<About />} />
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/about" element={<About />}>
+        <Route index element={<AboutOverview />} />
+        <Route path="features" element={<AboutFeatures />} />
+        <Route path="quick-start" element={<AboutQuickStart />} />
+        <Route path="best-practices" element={<AboutBestPractices />} />
+        <Route path="faq" element={<AboutFAQ />} />
+        <Route path="support" element={<AboutSupport />} />
+        <Route path="founding-team" element={<FoundingTeam />} />
+      </Route>
                         <Route path="/api" element={<APIPage />} />
                         <Route path="/careers" element={<Careers />} />
                         <Route path="/contact" element={<Contact />} />

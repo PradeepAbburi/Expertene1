@@ -1,8 +1,11 @@
 import "../styles/landing.css";
 import useStreak from "../lib/useStreak";
+import { useState } from 'react';
+import StreakHistory from '@/components/StreakHistory';
 
 export default function Landing() {
 	const { streak } = useStreak();
+	const [open, setOpen] = useState(false);
 
 	return (
 		<div className="lp-root">
@@ -12,8 +15,9 @@ export default function Landing() {
 					<h1 className="brand">Expertene</h1>
 					<div className="streak-badge">
 						<span className="streak-label">Streak</span>
-						<span className="streak-value">{streak}</span>
+						<button className="streak-value" onClick={() => setOpen(true)}>{streak}</button>
 					</div>
+					<StreakHistory open={open} onOpenChange={setOpen} />
 				</div>
 				{/* Center */}
 				<div className="scattered scattered-center">
