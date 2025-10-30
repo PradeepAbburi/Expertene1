@@ -10,7 +10,7 @@ import { HamburgerMenu } from '@/components/HamburgerMenu';
 import { LeftSidebar } from '@/components/LeftSidebar';
 import { RightSidebar } from '@/components/RightSidebar';
 import { useEffect, useState } from 'react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import OrbitSpinner from '@/components/ui/OrbitSpinner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LayoutProps {
@@ -206,9 +206,13 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation loading overlay shown when user clicks Write and we delay navigation */}
       {navLoading && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/90 backdrop-blur">
-          <div className="flex flex-col items-center gap-4">
-            <LoadingSpinner className="text-primary" />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/90 overlay-fade">
+          <style>{`
+            .overlay-fade{opacity:0;animation:overlay-fade-in 220ms ease-out forwards}
+            @keyframes overlay-fade-in{to{opacity:1}}
+          `}</style>
+          <div className="flex flex-col items-center gap-4 text-primary">
+            <OrbitSpinner size={56} />
             <div className="text-lg font-medium">Opening editor...</div>
           </div>
         </div>
