@@ -74,12 +74,13 @@ export default function AdminReports() {
     }
   };
 
-  const handleUpdateStatus = async (reportId: string, newStatus: string) => {
+  const handleUpdateStatus = async (reportId: string | null | undefined, newStatus: string) => {
+    if (!reportId) return;
     try {
       const { error } = await (supabase as any)
         .from('content_reports')
         .update({ status: newStatus })
-        .eq('id', reportId);
+        .eq('id', reportId as string);
 
       if (error) throw error;
 
@@ -98,7 +99,60 @@ export default function AdminReports() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const handleRemovePage = async (reportedItemId: string | null | undefined, reportId: string | null | undefined) => {
+    if (!reportedItemId || !reportId) return;
+    if (!confirm('Permanently remove this page? This action cannot be undone.')) return;
+    try {
+      // delete the reported article
+      const { error } = await (supabase as any)
+        .from('articles')
+        .delete()
+          .eq('id', reportedItemId as string);
+
+      if (error) throw error;
+
+      // mark report resolved
+  await (supabase as any).from('content_reports').update({ status: 'resolved' }).eq('id', reportId as string);
+
+      toast({ title: 'Page removed', description: 'The reported page was deleted.' });
+      fetchReports();
+    } catch (err: any) {
+      toast({ title: 'Failed to remove page', description: err.message || String(err), variant: 'destructive' });
+    }
+  };
+
+  const handleBlockAuthor = async (reportedItemId: string | null | undefined, reportId: string | null | undefined) => {
+    if (!reportedItemId || !reportId) return;
+    if (!confirm('Block the author of this page? This will prevent the user from accessing the platform.')) return;
+    try {
+      const { data: pageData, error: fetchError } = await (supabase as any)
+        .from('articles')
+        .select('id, author_id')
+          .eq('id', reportedItemId as string)
+        .single();
+
+      if (fetchError) throw fetchError;
+      const authorId = pageData?.author_id;
+      if (!authorId) throw new Error('Author not found');
+
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ is_blocked: true })
+        .eq('user_id', authorId);
+
+      if (error) throw error;
+
+      // mark report resolved
+  await (supabase as any).from('content_reports').update({ status: 'resolved' }).eq('id', reportId as string);
+
+      toast({ title: 'Author blocked', description: 'The author has been blocked from the platform.' });
+      fetchReports();
+    } catch (err: any) {
+      toast({ title: 'Failed to block author', description: err.message || String(err), variant: 'destructive' });
+    }
+  };
+
+  const getStatusBadge = (status: string | null | undefined) => {
     switch (status) {
       case 'pending':
         return <Badge variant="secondary">Pending</Badge>;
@@ -107,7 +161,7 @@ export default function AdminReports() {
       case 'dismissed':
         return <Badge variant="outline">Dismissed</Badge>;
       default:
-        return <Badge>{status}</Badge>;
+        return <Badge>{status ?? 'Unknown'}</Badge>;
     }
   };
 
@@ -164,7 +218,7 @@ export default function AdminReports() {
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={report.reporter.avatar_url} />
+                            <AvatarImage src={report.reporter.avatar_url ?? undefined} />
                             <AvatarFallback>
                               {report.reporter.display_name?.charAt(0) || report.reporter.username?.charAt(0)}
                             </AvatarFallback>
@@ -174,7 +228,7 @@ export default function AdminReports() {
                               Reported by {report.reporter.display_name || report.reporter.username}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              @{report.reporter.username} • {new Date(report.created_at).toLocaleString()}
+                              @{report.reporter.username} • {report.created_at ? new Date(report.created_at).toLocaleString() : '—'}
                             </p>
                           </div>
                         </div>
@@ -194,7 +248,7 @@ export default function AdminReports() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleUpdateStatus(report.id, 'resolved')}
+                            onClick={() => handleUpdateStatus(report.id as string, 'resolved')}
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Mark Resolved
@@ -202,24 +256,35 @@ export default function AdminReports() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleUpdateStatus(report.id, 'dismissed')}
+                            onClick={() => handleUpdateStatus(report.id as string, 'dismissed')}
                           >
                             <XCircle className="h-4 w-4 mr-1" />
                             Dismiss
                           </Button>
                           <Button
                             size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              // Navigate to the reported content
-                              if (report.reported_item_type === 'page') {
-                                navigate(`/page/${report.reported_item_id}`);
-                              }
-                            }}
+                            variant="destructive"
+                            onClick={() => handleRemovePage(report.reported_item_id as string, report.id as string)}
                           >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Content
+                            Remove Page
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleBlockAuthor(report.reported_item_id as string, report.id as string)}
+                          >
+                            Block Author
+                          </Button>
+                          {report.reported_item_type === 'page' && report.reported_item_id && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => navigate(`/page/${report.reported_item_id as string}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Content
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

@@ -1,0 +1,3 @@
+-- REMOVED: email_otps table migration
+-- The email OTP flow has been retired and the OTP-related functions were removed from the codebase.
+-- This migration file is kept for history but no longer creates the table when run.

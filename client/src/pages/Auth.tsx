@@ -15,18 +15,30 @@ export default function Auth() {
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  // Functions base: prefer env override, otherwise use local Supabase Functions during dev
+  const _envBase = (import.meta as any).env?.VITE_FUNCTIONS_BASE;
+  const FUNCTIONS_BASE = _envBase || ((import.meta as any).env?.DEV ? 'http://localhost:54321/functions/v1' : '/functions/v1');
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: window.location.origin + '/reset-password'
-      });
-      if (error) throw error;
-      toast({
-        title: 'Password Reset Email Sent',
-        description: 'Check your inbox for a reset link.',
-      });
+      // Use server-side send-reset-link function to email a reset link
+      let res;
+      try {
+        res = await fetch(`${FUNCTIONS_BASE}/send-reset-link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: forgotEmail }),
+        });
+      } catch (netErr: any) {
+        // network-level errors (e.g. CORS or functions not reachable)
+        toast({ title: 'Network error', description: 'Could not reach the functions endpoint. Make sure your functions are deployed or that VITE_FUNCTIONS_BASE is set correctly (for local dev use http://localhost:54321/functions/v1).', variant: 'destructive' });
+        throw netErr;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || 'failed_to_send_reset_link');
+      toast({ title: 'Reset link sent', description: 'Check your email for the password reset link.' });
       setShowForgot(false);
       setForgotEmail('');
     } catch (error: any) {
@@ -39,6 +51,8 @@ export default function Auth() {
       setForgotLoading(false);
     }
   };
+
+  
   const enableUsernameLogin = (import.meta as any).env?.VITE_ENABLE_USERNAME_LOGIN === 'true';
   const [email, setEmail] = useState('');
   const [identifier, setIdentifier] = useState(''); // username or email
@@ -419,6 +433,9 @@ export default function Auth() {
                   required
                 />
               </div>
+
+              <div className="text-sm text-muted-foreground">We'll send a password reset link to your email with instructions to choose a new password.</div>
+
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setShowForgot(false)}>
                   Cancel
