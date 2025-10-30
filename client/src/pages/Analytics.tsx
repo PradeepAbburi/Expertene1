@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Heart, Bookmark, TrendingUp, MessageCircle, Zap, Calendar, IndianRupee, X } from 'lucide-react';
+import { Eye, Heart, Bookmark, TrendingUp, MessageCircle, Zap, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,17 +14,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Article {
-  id: string | null | undefined;
-  title: string | null | undefined;
-  subtitle?: string | null | undefined;
-  cover_image_url?: string | null | undefined;
-  reading_time?: number;
-  likes_count: number;
-  bookmarks_count: number;
-  views_count: number;
-  comments_count: number;
-  published_at: string | null | undefined;
-  tags: string[];
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  cover_image_url?: string | null;
+  reading_time?: number | null;
+  likes_count: number | null;
+  bookmarks_count: number | null;
+  views_count: number | null;
+  comments_count: number | null;
+  published_at?: string | null;
+  tags: string[] | null;
 }
 
 // Realtime boost state persisted locally per-article
@@ -110,7 +110,7 @@ export default function Analytics() {
         .order('published_at', { ascending: false });
 
       if (error) throw error;
-      setArticles(data || []);
+      setArticles((data || []) as unknown as Article[]);
     } catch (error) {
       console.error('Error fetching articles:', error);
     } finally {
@@ -154,10 +154,10 @@ export default function Analytics() {
     setShowPostDetailsDialog(true);
   };
 
-  const totalViews = articles.reduce((sum, a) => sum + a.views_count, 0);
-  const totalLikes = articles.reduce((sum, a) => sum + a.likes_count, 0);
-  const totalBookmarks = articles.reduce((sum, a) => sum + a.bookmarks_count, 0);
-  const totalComments = articles.reduce((sum, a) => sum + a.comments_count, 0);
+  const totalViews = articles.reduce((sum, a) => sum + Number(a.views_count || 0), 0);
+  const totalLikes = articles.reduce((sum, a) => sum + Number(a.likes_count || 0), 0);
+  const totalBookmarks = articles.reduce((sum, a) => sum + Number(a.bookmarks_count || 0), 0);
+  const totalComments = articles.reduce((sum, a) => sum + Number(a.comments_count || 0), 0);
 
   // Compute extra impressions from active boosts, proportional to dailyBudget per minute
   const getBoostExtraImpressions = (articleId: string) => {
@@ -177,6 +177,7 @@ export default function Analytics() {
     return (
       <div className="max-w-6xl mx-auto">
         <BackButton />
+        <span className="sr-only">{tick}</span>
         <div className="space-y-6">
           <Skeleton className="h-8 w-48" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -317,9 +318,9 @@ export default function Analytics() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className="text-xs bg-primary/5 border-primary/20">
                             <TrendingUp className="h-3 w-3 mr-1" />
-                            {formatImpressions(Math.floor(article.views_count * 3.5), getBoostExtraImpressions(article.id))} impressions
+                            {formatImpressions(Math.floor(Number(article.views_count || 0) * 3.5), getBoostExtraImpressions(String(article.id)))} impressions
                           </Badge>
-                          {activeBoosts[article.id] && activeBoosts[article.id].endAt > Date.now() && (
+                          {activeBoosts[String(article.id)] && activeBoosts[String(article.id)].endAt > Date.now() && (
                             <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-200">
                               <Zap className="h-3 w-3 mr-1" />
                               Boost Active
@@ -342,7 +343,7 @@ export default function Analytics() {
                           </span>
                         </div>
                         
-                        {article.tags.length > 0 && (
+                        {Array.isArray(article.tags) && article.tags.length > 0 && (
                           <div className="flex items-center gap-2 flex-wrap">
                             {article.tags.slice(0, 3).map((tag) => (
                               <Badge key={tag} variant="secondary" className="text-xs">
@@ -412,7 +413,7 @@ export default function Analytics() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium truncate text-sm">{selectedArticle.title}</h4>
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(selectedArticle.published_at))} ago
+                    {selectedArticle.published_at ? `${formatDistanceToNow(new Date(selectedArticle.published_at))} ago` : ''}
                   </p>
                 </div>
               </div>
@@ -521,7 +522,7 @@ export default function Analytics() {
                     </p>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    Published {formatDistanceToNow(new Date(selectedArticle.published_at))} ago
+                    {selectedArticle.published_at ? `Published ${formatDistanceToNow(new Date(selectedArticle.published_at))} ago` : ''}
                   </p>
                 </div>
               </div>
@@ -536,7 +537,7 @@ export default function Analytics() {
                     </span>
                   </div>
                   <div className="text-5xl font-bold text-primary mb-2">
-                    {(selectedArticle.views_count * 3.5).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    {(Math.floor(Number(selectedArticle.views_count || 0) * 3.5)).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                   </div>
                   <div className="text-muted-foreground">
                     Times your post appeared in feeds
@@ -554,7 +555,7 @@ export default function Analytics() {
                         <Eye className="h-6 w-6 text-primary" />
                       </div>
                       <div className="text-3xl font-bold mb-1">
-                        {selectedArticle.views_count.toLocaleString()}
+                        {Number(selectedArticle.views_count || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-muted-foreground mb-1">Views</div>
                       <div className="text-xs text-muted-foreground">
@@ -572,7 +573,7 @@ export default function Analytics() {
                         <Heart className="h-6 w-6 text-primary" />
                       </div>
                       <div className="text-3xl font-bold mb-1">
-                        {selectedArticle.likes_count.toLocaleString()}
+                        {Number(selectedArticle.likes_count || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-muted-foreground mb-1">Likes</div>
                       <div className="text-xs text-muted-foreground">
@@ -590,7 +591,7 @@ export default function Analytics() {
                         <Bookmark className="h-6 w-6 text-primary" />
                       </div>
                       <div className="text-3xl font-bold mb-1">
-                        {selectedArticle.bookmarks_count.toLocaleString()}
+                        {Number(selectedArticle.bookmarks_count || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-muted-foreground mb-1">Saves</div>
                       <div className="text-xs text-muted-foreground">
@@ -608,7 +609,7 @@ export default function Analytics() {
                         <MessageCircle className="h-6 w-6 text-primary" />
                       </div>
                       <div className="text-3xl font-bold mb-1">
-                        {selectedArticle.comments_count.toLocaleString()}
+                        {Number(selectedArticle.comments_count || 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-muted-foreground mb-1">Comments</div>
                       <div className="text-xs text-muted-foreground">

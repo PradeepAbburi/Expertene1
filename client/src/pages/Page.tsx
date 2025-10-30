@@ -86,6 +86,7 @@ export default function Page() {
     setLoading(true);
     try {
       // If we have a share token but no id, lookup the article by share_token
+      let articleData: any = null;
       if (!id && shareToken) {
         const { data, error } = await supabase
           .from('articles')
@@ -117,6 +118,7 @@ export default function Page() {
         if (error) throw error;
         if (!data) throw new Error('Page not found');
 
+        articleData = data;
         setPage(data as PageData);
         // set id local variable-like behaviour by not relying on param further
       } else {
@@ -151,6 +153,7 @@ export default function Page() {
         if (error) throw error;
         if (!data) throw new Error('Page not found');
 
+        articleData = data;
         setPage(data as PageData);
       }
 
@@ -160,30 +163,30 @@ export default function Page() {
         if (!runOnceRef.current) {
           // Debounce via sessionStorage: if we incremented this article very
           // recently (e.g. due to dev double-mount), skip the increment.
-          const storageKey = `last_view_increment_${data.id}`;
+          const storageKey = `last_view_increment_${articleData?.id ?? id}`;
           let last: string | null = null;
           try { last = sessionStorage.getItem(storageKey); } catch {}
           const now = Date.now();
           const debounceMs = 5000; // 5 seconds
 
           if (last && (now - Number(last) < debounceMs)) {
-            console.debug('[views] skipping increment due to recent increment', { id: data.id });
+            console.debug('[views] skipping increment due to recent increment', { id: articleData?.id ?? id });
             runOnceRef.current = true;
           } else {
             runOnceRef.current = true;
             // Mark that an increment has started for this tab immediately
             try { sessionStorage.setItem(storageKey, String(now)); } catch {}
-
-            const { error: rpcError } = await supabase.rpc('increment_article_views', { article_id_param: data.id });
+            const articleIdForRpc = articleData?.id ?? id;
+            const { error: rpcError } = await supabase.rpc('increment_article_views', { article_id_param: articleIdForRpc });
             if (rpcError) {
               console.error('RPC increment_article_views error in fetchPage:', rpcError);
               // Fallback: try direct update
               try {
-                const newViews = Number(data.views_count ?? 0) + 1;
+                const newViews = Number(articleData?.views_count ?? 0) + 1;
                 const { error: updErr } = await supabase
                   .from('articles')
                   .update({ views_count: newViews })
-                  .eq('id', data.id);
+                  .eq('id', articleIdForRpc);
                 if (!updErr) {
                   setPage(prev => prev ? { ...prev, views_count: newViews } : prev);
                 } else {
@@ -198,7 +201,7 @@ export default function Page() {
                 const { data: refreshed, error: selectError } = await supabase
                   .from('articles')
                   .select('views_count')
-                  .eq('id', data.id)
+                  .eq('id', articleData?.id ?? id)
                   .single();
                 if (!selectError && refreshed) {
                   setPage(prev => prev ? { ...prev, views_count: Number(refreshed.views_count ?? prev.views_count) } : prev);
@@ -766,18 +769,10 @@ export default function Page() {
     );
   }
 
-  // compute back target: if this is a shared link, prefer author profile; if from archive, go to archive
-  const backTo = from === 'archive'
-    ? '/archive'
-    : (shareToken ? (page?.profiles?.username ? `/profile/${page.profiles.username}` : '/profile') : undefined);
-
-  // reduce top padding for unauthenticated users viewing a shared article (improves mobile spacing)
-  const topPaddingClass = (shareToken && !isAuthenticated) ? 'pt-4 sm:pt-0' : 'pt-20 sm:pt-0';
-
   return (
-  <article ref={articleRef} className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${topPaddingClass}`}>
+  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-0">
       <div className="flex items-center justify-between mb-6">
-        <BackButton to={backTo} />
+        <BackButton to={from === 'archive' ? '/archive' : undefined} />
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
