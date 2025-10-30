@@ -28,7 +28,7 @@ export function TextBlock({ content, onChange, onFocus, onBlur }: TextBlockProps
         [{ list: 'ordered' }, { list: 'bullet' }],
         [{ indent: '-1' }, { indent: '+1' }],
         [{ align: [] }],
-  ['blockquote', 'code', 'code-block'],
+        ['blockquote', 'code-block'],
         ['link'],
         ['clean']
       ],
@@ -65,7 +65,7 @@ export function TextBlock({ content, onChange, onFocus, onBlur }: TextBlockProps
     'list', 'bullet',
     'indent',
     'align',
-    'blockquote', 'code', 'code-block',
+    'blockquote', 'code-block',
     'link'
   ], []);
 
