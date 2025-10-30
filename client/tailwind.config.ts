@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import typographyPlugin from '@tailwindcss/typography';
+import animatePlugin from 'tailwindcss-animate';
 
 export default {
 	darkMode: ["class"],
@@ -89,8 +91,48 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+			},
+					typography: (theme: any) => ({
+						DEFAULT: {
+							css: {
+								// allow the surrounding text color to control typography so the
+								// rendered article matches the editor/preview colors
+								color: 'inherit',
+								a: { color: 'var(--primary)' },
+								strong: { color: 'inherit' },
+											code: {
+												// use the site's card background so code blocks match the design system
+												backgroundColor: 'hsl(var(--card) / 0.65)',
+												color: 'hsl(var(--card-foreground))',
+							padding: '0.2rem 0.35rem',
+							borderRadius: theme('borderRadius.sm')
+						},
+						pre: {
+												backgroundColor: 'hsl(var(--card) / 0.85)',
+												color: 'hsl(var(--card-foreground))',
+							padding: '1rem',
+							borderRadius: theme('borderRadius.md')
+						},
+								h1: { color: 'inherit' },
+								h2: { color: 'inherit' },
+								h3: { color: 'inherit' }
+					}
+				},
+				invert: {
+					css: {
+						color: 'var(--foreground)',
+									code: {
+										backgroundColor: 'hsl(var(--card) / 0.8)',
+										color: 'hsl(var(--card-foreground))'
+									},
+									pre: {
+										backgroundColor: 'hsl(var(--card) / 0.95)',
+										color: 'hsl(var(--card-foreground))'
+									}
+					}
+				}
+			})
 		}
 	},
-	plugins: [require("tailwindcss-animate"), require('@tailwindcss/typography')],
+	plugins: [animatePlugin, typographyPlugin],
 } satisfies Config;
