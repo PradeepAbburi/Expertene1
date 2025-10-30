@@ -766,10 +766,18 @@ export default function Page() {
     );
   }
 
+  // compute back target: if this is a shared link, prefer author profile; if from archive, go to archive
+  const backTo = from === 'archive'
+    ? '/archive'
+    : (shareToken ? (page?.profiles?.username ? `/profile/${page.profiles.username}` : '/profile') : undefined);
+
+  // reduce top padding for unauthenticated users viewing a shared article (improves mobile spacing)
+  const topPaddingClass = (shareToken && !isAuthenticated) ? 'pt-4 sm:pt-0' : 'pt-20 sm:pt-0';
+
   return (
-  <article ref={articleRef} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-0">
+  <article ref={articleRef} className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 ${topPaddingClass}`}>
       <div className="flex items-center justify-between mb-6">
-        <BackButton to={from === 'archive' ? '/archive' : undefined} />
+        <BackButton to={backTo} />
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
