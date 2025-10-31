@@ -63,9 +63,14 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, refreshProfile } = useAuth();
   const location = useLocation();
   const [showConfirmationPage, setShowConfirmationPage] = useState(false);
+  // onboarding fields
+  const [onboardUsername, setOnboardUsername] = useState('');
+  const [onboardDisplayName, setOnboardDisplayName] = useState('');
+  const [onboardBio, setOnboardBio] = useState('');
+  const [onboardSaving, setOnboardSaving] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -91,6 +96,43 @@ export default function Auth() {
       }
     }
   }, [location]);
+
+  // When onboarding UI is shown and user becomes available, prefill some fields
+  useEffect(() => {
+    if (showConfirmationPage && user) {
+      setOnboardDisplayName(user.user_metadata?.full_name || user.user_metadata?.name || '');
+      setOnboardUsername(user.user_metadata?.preferred_username || '');
+    }
+  }, [showConfirmationPage, user]);
+
+  const handleCompleteOnboarding = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!user) return;
+    setOnboardSaving(true);
+    try {
+      const payload = {
+        user_id: user.id,
+        username: onboardUsername || null,
+        display_name: onboardDisplayName || null,
+        bio: onboardBio || null,
+      };
+
+      const { error } = await supabase.from('profiles').upsert(payload, { returning: 'minimal' });
+      if (error) throw error;
+
+      // Refresh profile in auth context
+      try {
+        refreshProfile();
+      } catch {}
+
+      // Navigate to primary app area
+      navigate('/feed');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || String(err), variant: 'destructive' });
+    } finally {
+      setOnboardSaving(false);
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,13 +256,48 @@ export default function Auth() {
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 overflow-hidden">
       {showConfirmationPage ? (
         <div className="w-full max-w-md p-8 mx-auto">
-          <div className="bg-background rounded-lg shadow p-8 text-center">
-            <CheckCircle className="mx-auto mb-4 text-green-500" size={56} />
-            <h2 className="text-2xl font-semibold mb-2">Email confirmed</h2>
-            <p className="text-muted-foreground mb-6">Your email has been successfully confirmed. You can now continue to the app.</p>
-            <div className="flex justify-center">
-              <Button onClick={() => navigate('/feed')}>Done</Button>
-            </div>
+          <div className="bg-background rounded-lg shadow p-8">
+            <h2 className="text-2xl font-semibold mb-2">Welcome — a few quick details</h2>
+            <p className="text-muted-foreground mb-4">Almost done — help us set up your profile.</p>
+
+            <form onSubmit={handleCompleteOnboarding} className="space-y-4">
+              <div>
+                <Label htmlFor="onboard-username">Username</Label>
+                <Input
+                  id="onboard-username"
+                  value={onboardUsername}
+                  onChange={(e) => setOnboardUsername(e.target.value)}
+                  placeholder="choose-a-username"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="onboard-display">Display name</Label>
+                <Input
+                  id="onboard-display"
+                  value={onboardDisplayName}
+                  onChange={(e) => setOnboardDisplayName(e.target.value)}
+                  placeholder="Your display name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="onboard-bio">Bio</Label>
+                <Textarea
+                  id="onboard-bio"
+                  value={onboardBio}
+                  onChange={(e) => setOnboardBio(e.target.value)}
+                  placeholder="A short bio"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={() => { setShowConfirmationPage(false); navigate('/'); }}>Skip</Button>
+                <Button type="submit" disabled={onboardSaving}>{onboardSaving ? 'Saving...' : 'Complete'}</Button>
+              </div>
+            </form>
           </div>
         </div>
       ) : (
