@@ -13,12 +13,12 @@ import { BackButton } from '@/components/BackButton';
 import { Camera, Save } from 'lucide-react';
 
 interface ProfileData {
-  username: string | null | undefined;
-  display_name: string | null | undefined;
-  bio: string | null | undefined;
-  avatar_url: string | null | undefined;
-  website_url: string | null | undefined;
-  location: string | null | undefined;
+  username?: string;
+  display_name?: string;
+  bio?: string;
+  avatar_url?: string;
+  website_url?: string;
+  location?: string;
 }
 
 export default function EditProfile() {
@@ -27,14 +27,10 @@ export default function EditProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<ProfileData>({
-    username: '',
-    display_name: '',
-    bio: '',
-    avatar_url: '',
-    website_url: '',
-    location: '',
-  });
+  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [profile, setProfile] = useState<ProfileData>({});
 
   useEffect(() => {
     if (user) {
@@ -56,12 +52,12 @@ export default function EditProfile() {
       if (error) throw error;
       
       setProfile({
-        username: data.username || '',
-        display_name: data.display_name || '',
-        bio: data.bio || '',
-        avatar_url: data.avatar_url || '',
-        website_url: data.website_url || '',
-        location: data.location || '',
+        username: data.username ?? undefined,
+        display_name: data.display_name ?? undefined,
+        bio: data.bio ?? undefined,
+        avatar_url: data.avatar_url ?? undefined,
+        website_url: data.website_url ?? undefined,
+        location: data.location ?? undefined,
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -102,7 +98,7 @@ export default function EditProfile() {
       
       // Refresh profile in auth context
       refreshProfile();
-      navigate(`/profile/${profile.username}`);
+  navigate(`/profile/${profile.username ?? ''}`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -116,39 +112,82 @@ export default function EditProfile() {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
 
+    // show preview and open crop modal
+    const url = URL.createObjectURL(file);
+    setSelectedAvatar(file);
+    setAvatarPreview(url);
+    setShowCropModal(true);
+  };
+
+  const cropAndUpload = async () => {
+    if (!selectedAvatar || !user) return;
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      // load image
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = avatarPreview || URL.createObjectURL(selectedAvatar);
+      });
+
+      // crop center square
+      const size = Math.min(img.width, img.height);
+      const sx = Math.floor((img.width - size) / 2);
+      const sy = Math.floor((img.height - size) / 2);
+
+      const canvas = document.createElement('canvas');
+      const TARGET = 512; // target size
+      canvas.width = TARGET;
+      canvas.height = TARGET;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, TARGET, TARGET);
+
+      const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+      if (!blob) throw new Error('Failed to create image blob');
+
+      const fileExt = 'png';
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
+      // upload to Supabase storage (allow public read on bucket)
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
-
+        .upload(filePath, blob, { contentType: 'image/png' });
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const publicUrl = publicData.publicUrl;
 
-      setProfile(prev => ({ ...prev, avatar_url: data.publicUrl }));
-      
-      // Refresh profile in auth context
+      // update profiles table immediately
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('user_id', user.id);
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
       refreshProfile();
-      
-      toast({
-        title: "Success!",
-        description: "Avatar uploaded successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload avatar.",
-        variant: "destructive",
-      });
+      setShowCropModal(false);
+      setSelectedAvatar(null);
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+        setAvatarPreview(null);
+      }
+
+      toast({ title: 'Success!', description: 'Avatar updated.' });
+    } catch (err: any) {
+      toast({ title: 'Upload error', description: err.message || String(err), variant: 'destructive' });
     }
+  };
+
+  const cancelCrop = () => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
+    setShowCropModal(false);
   };
 
   if (loading) {
@@ -184,7 +223,7 @@ export default function EditProfile() {
             <div className="flex flex-col items-center space-y-4">
               <div className="relative">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={profile.avatar_url} />
+                  <AvatarImage src={profile.avatar_url ?? undefined} />
                   <AvatarFallback className="text-lg">
                     {profile.display_name?.charAt(0) || profile.username?.charAt(0) || 'U'}
                   </AvatarFallback>
@@ -211,13 +250,34 @@ export default function EditProfile() {
               </p>
             </div>
 
+            {/* Crop Modal */}
+            {showCropModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="bg-background rounded-lg p-6 w-[90vw] max-w-lg">
+                  <h3 className="text-lg font-semibold mb-4">Crop avatar</h3>
+                  <div className="flex items-center justify-center">
+                    <div className="h-64 w-64 rounded-full overflow-hidden border">
+                      {avatarPreview && (
+                        <img src={avatarPreview} alt="preview" className="object-cover w-full h-full" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-3">We will crop the image to a circle. Click "Crop & Upload" to continue.</p>
+                  <div className="flex gap-3 justify-end mt-4">
+                    <Button variant="outline" onClick={cancelCrop}>Cancel</Button>
+                    <Button onClick={cropAndUpload}>Crop & Upload</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Form Fields */}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  value={profile.username}
+                  value={profile.username ?? ''}
                   onChange={(e) => setProfile(prev => ({ ...prev, username: e.target.value }))}
                   placeholder="Your unique username"
                   required
@@ -228,7 +288,7 @@ export default function EditProfile() {
                 <Label htmlFor="display_name">Display Name</Label>
                 <Input
                   id="display_name"
-                  value={profile.display_name}
+                  value={profile.display_name ?? ''}
                   onChange={(e) => setProfile(prev => ({ ...prev, display_name: e.target.value }))}
                   placeholder="Your display name"
                 />
@@ -239,7 +299,7 @@ export default function EditProfile() {
               <Label htmlFor="bio">Bio</Label>
               <Textarea
                 id="bio"
-                value={profile.bio}
+                value={profile.bio ?? ''}
                 onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
                 placeholder="Tell us about yourself..."
                 rows={4}
@@ -253,7 +313,7 @@ export default function EditProfile() {
                 <Input
                   id="website_url"
                   type="url"
-                  value={profile.website_url}
+                  value={profile.website_url ?? ''}
                   onChange={(e) => setProfile(prev => ({ ...prev, website_url: e.target.value }))}
                   placeholder="https://your-website.com"
                 />
@@ -263,7 +323,7 @@ export default function EditProfile() {
                 <Label htmlFor="location">Location</Label>
                 <Input
                   id="location"
-                  value={profile.location}
+                  value={profile.location ?? ''}
                   onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
                   placeholder="City, Country"
                 />

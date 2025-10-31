@@ -1,11 +1,12 @@
 
 /* stylelint-disable */
 /* Ensure Tailwind's core directives are present so PostCSS/Tailwind can process project @layer rules. */
+@import './styles/globals.css';
+
+/* Ensure Tailwind's core directives are present so PostCSS/Tailwind can process project @layer rules. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './styles/globals.css';
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
@@ -316,41 +317,28 @@ All colors MUST be HSL.
   color: hsl(var(--border)) !important;
 }
 
-/* Ensure published pages keep code styling (matching editor visuals) */
+/* Code block background & inline code styling
+   - Ensure code blocks inside prose, Quill editor, and generic <pre> elements
+     have a neutral grey background and subtle border for readability. */
 .prose pre,
-.prose code,
-pre code,
-.ql-syntax {
+.ql-editor pre,
+pre,
+pre[class*="language-"],
+.code-block {
   background: hsl(var(--muted)) !important;
+  border: 1px solid hsl(var(--border)) !important;
   color: hsl(var(--foreground)) !important;
-  padding: 0.4rem 0.6rem !important;
-  border-radius: 8px !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace !important;
-}
-
-/* Block code (pre) should have larger padding and scroll when overflow */
-.prose pre {
-  padding: 1rem !important;
-  overflow: auto;
+  padding: 0.75rem 1rem !important;
   border-radius: 0.5rem !important;
+  overflow: auto !important;
 }
 
-/* Inline code within prose */
-.prose code {
+.prose code,
+.ql-editor code,
+code,
+pre code {
   background: hsl(var(--muted)) !important;
-  padding: 0.15rem 0.35rem !important;
-  border-radius: 6px !important;
-  font-size: 0.95em !important;
-}
-
-/* Ensure headings inside rendered HTML get proper spacing and weight */
-.prose h1, .prose h2, .prose h3, .prose h4 {
-  margin-top: 1.25rem;
-  margin-bottom: 0.6rem;
-  letter-spacing: -0.02em;
-}
-
-/* Keep Quill code-block syntax highlighting consistent */
-.ql-syntax {
-  white-space: pre-wrap !important;
+  padding: 0.12rem 0.4rem !important;
+  border-radius: 0.25rem !important;
+  color: hsl(var(--foreground)) !important;
 }

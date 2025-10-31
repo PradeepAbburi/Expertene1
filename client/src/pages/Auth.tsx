@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function Auth() {
   // Forgot password state and handler
@@ -105,19 +106,22 @@ export default function Auth() {
     }
   }, [showConfirmationPage, user]);
 
-  const handleCompleteOnboarding = async (e?: React.FormEvent) => {
+  const handleCompleteOnboarding = async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     if (!user) return;
     setOnboardSaving(true);
     try {
-      const payload = {
+      // Supabase `profiles` username expects a non-null string in our types.
+      // Convert empty strings to undefined so PostgREST will treat them as absent.
+      const payload: any = {
         user_id: user.id,
-        username: onboardUsername || null,
-        display_name: onboardDisplayName || null,
-        bio: onboardBio || null,
+        username: onboardUsername || undefined,
+        display_name: onboardDisplayName || undefined,
+        bio: onboardBio || undefined,
       };
 
-      const { error } = await supabase.from('profiles').upsert(payload, { returning: 'minimal' });
+      // upsert profile without passing invalid options to the Postgrest client
+      const { error } = await supabase.from('profiles').upsert(payload);
       if (error) throw error;
 
       // Refresh profile in auth context
@@ -153,6 +157,8 @@ export default function Auth() {
         email,
         password,
         options: {
+          // ensure Supabase sends a confirmation email that redirects back to our auth page
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             username: username,
             display_name: username,
@@ -163,8 +169,8 @@ export default function Auth() {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Account created successfully! You can now sign in.",
+        title: 'Check your email',
+        description: 'A confirmation email has been sent. Please follow the link in your inbox to continue onboarding.',
       });
     } catch (error: any) {
       toast({
@@ -287,7 +293,7 @@ export default function Auth() {
                 <Textarea
                   id="onboard-bio"
                   value={onboardBio}
-                  onChange={(e) => setOnboardBio(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setOnboardBio(e.target.value)}
                   placeholder="A short bio"
                   rows={3}
                 />
