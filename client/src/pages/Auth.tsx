@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 export default function Auth() {
   // Forgot password state and handler
@@ -65,14 +64,33 @@ export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
-  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+  const location = useLocation();
+  const [showConfirmationPage, setShowConfirmationPage] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/feed');
     }
   }, [isAuthenticated, navigate]);
+
+  // Detect Supabase confirmation redirect (params may be in search or in hash)
+  useEffect(() => {
+    const search = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const type = search.get('type') || hash.get('type');
+    const accessToken = search.get('access_token') || hash.get('access_token');
+
+    if (type === 'signup' && accessToken) {
+      setShowConfirmationPage(true);
+      // Clean up URL to remove tokens for safety (replace without adding history entry)
+      try {
+        const base = location.pathname || '/auth';
+        window.history.replaceState({}, document.title, base);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [location]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,11 +119,11 @@ export default function Auth() {
       });
 
       if (error) throw error;
-      // Inform user that a verification link has been sent and show message on Sign In tab
-      const msg = `A verification link has been sent to ${email}. Please check your inbox to confirm your account.`;
-      setVerificationMessage(msg);
-      setActiveTab('signin');
-      toast({ title: 'Check your email', description: 'We sent a verification link. Please confirm to continue.' });
+
+      toast({
+        title: "Success!",
+        description: "Account created successfully! You can now sign in.",
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -194,7 +212,18 @@ export default function Auth() {
 
   return (
     <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 overflow-hidden">
-      
+      {showConfirmationPage ? (
+        <div className="w-full max-w-md p-8 mx-auto">
+          <div className="bg-background rounded-lg shadow p-8 text-center">
+            <CheckCircle className="mx-auto mb-4 text-green-500" size={56} />
+            <h2 className="text-2xl font-semibold mb-2">Email confirmed</h2>
+            <p className="text-muted-foreground mb-6">Your email has been successfully confirmed. You can now continue to the app.</p>
+            <div className="flex justify-center">
+              <Button onClick={() => navigate('/feed')}>Done</Button>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="w-full h-screen grid grid-cols-1 lg:grid-cols-2 relative z-10">
         {/* Grid boxes background behind form */}
         <div style={{
@@ -280,18 +309,13 @@ export default function Auth() {
               <p className="text-muted-foreground">Sign in to your account or create a new one</p>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 h-11">
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6 h-11">
                 <TabsTrigger value="signin" className="text-base font-medium">Sign In</TabsTrigger>
                 <TabsTrigger value="signup" className="text-base font-medium">Sign Up</TabsTrigger>
               </TabsList>
 
-                  <TabsContent value="signin" className="mt-0">
-                    {verificationMessage && activeTab === 'signin' && (
-                      <div className="mb-4 p-3 rounded-md bg-primary/5 text-primary">
-                        {verificationMessage}
-                      </div>
-                    )}
+                <TabsContent value="signin" className="mt-0">
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="identifier" className="text-sm font-medium">Username or Email</Label>
@@ -438,9 +462,10 @@ export default function Auth() {
               </Tabs>
           </div>
         </div>
-      </div>
-      
-      {/* Forgot Password Modal */}
+  </div>
+  )}
+
+  {/* Forgot Password Modal */}
       {showForgot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-background rounded-lg shadow-lg p-8 w-full max-w-sm">
