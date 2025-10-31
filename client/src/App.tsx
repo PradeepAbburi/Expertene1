@@ -2,8 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 // import Landing from "./pages/Landing"; // Unused
 import Index from "./pages/Index";
 import ExpNotebook from "./pages/ExpNotebook";
@@ -84,12 +84,12 @@ export default function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          {/* Detect Supabase auth callback params anywhere in the URL and route to /auth so Auth.tsx can show confirmation */}
+          <AuthRedirectHandler />
           {online ? (
             isLoggedIn ? (
               <Layout>
                 <Routes>
-                  {/* If a logged-in user somehow lands on /auth (e.g. after Supabase magic-link), redirect to feed */}
-                  <Route path="/auth" element={<Navigate to="/feed" replace />} />
                   <Route path="/feed" element={<Feed />} />
                   <Route path="/about" element={<About />}>
                     <Route index element={<AboutOverview />} />
@@ -179,4 +179,27 @@ export default function App() {
       </TooltipProvider>
     </QueryClientProvider>
   );
+}
+
+function AuthRedirectHandler() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const search = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const type = search.get('type') || hash.get('type');
+      const accessToken = search.get('access_token') || hash.get('access_token');
+      // If Supabase returned auth params on a different path, route user to /auth so Auth.tsx can handle confirmation
+      if (type && accessToken && location.pathname !== '/auth') {
+        const combined = (location.search || '') + (location.hash || '');
+        navigate('/auth' + combined, { replace: true });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [location, navigate]);
+
+  return null;
 }
