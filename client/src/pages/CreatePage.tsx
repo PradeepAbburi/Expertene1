@@ -17,6 +17,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { ShareDialog } from '@/components/ShareDialog';
 import { DraftsDropdown } from '@/components/DraftsDropdown';
 import { ImageCropDialog } from '@/components/ImageCropDialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function CreatePage() {
   const { user } = useAuth();
@@ -40,9 +41,11 @@ export default function CreatePage() {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [pageId, setPageId] = useState<string>('');
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialSnapshot = useRef<string>('');
 
   // Default: insert a spacer as the first block for new pages
   useEffect(() => {
@@ -56,6 +59,8 @@ export default function CreatePage() {
       ]);
       // editor ready for new page
       setTimeout(() => setInitializing(false), 0);
+      // set initial snapshot for dirty-check (freshly created empty page)
+      initialSnapshot.current = JSON.stringify({ title: '', subtitle: '', coverImage: '', blocks: [{ id: `block-${Date.now()}-init`, type: 'spacer', content: { height: 24 } }], tags: [], isPrivate: false });
     }
   }, [editId]);
 
@@ -90,6 +95,8 @@ export default function CreatePage() {
       setShareToken(data.share_token || '');
       setCollaborators(data.page_collaborators || []);
       setPageId(id);
+      // capture initial snapshot for dirty-check when editing existing page
+      initialSnapshot.current = JSON.stringify({ title: data.title || '', subtitle: data.subtitle || '', coverImage: data.cover_image_url || '', blocks: (data.content as any)?.blocks || [], tags: data.tags || [], isPrivate: data.is_private || false });
     } catch (error: any) {
       toast({
         title: "Error loading page",
@@ -97,6 +104,16 @@ export default function CreatePage() {
         variant: "destructive",
       });
       navigate('/');
+    }
+  };
+
+  const snapshot = () => JSON.stringify({ title: title || '', subtitle: subtitle || '', coverImage: coverImage || '', blocks: blocks || [], tags: tags || [], isPrivate: isPrivate || false });
+
+  const isDirty = () => {
+    try {
+      return initialSnapshot.current !== snapshot();
+    } catch {
+      return false;
     }
   };
 
@@ -114,6 +131,30 @@ export default function CreatePage() {
     } catch (error) {
       console.error('Error fetching collaborators:', error);
     }
+  };
+
+  const handleBackClick = () => {
+    if (isDirty()) {
+      setShowExitDialog(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleSaveDraftAndExit = async () => {
+    setShowExitDialog(false);
+    try {
+      await handleSubmit(false, { skipNavigate: true });
+    } catch (e) {
+      // saving failed — keep user in editor and show toast handled by handleSubmit
+      return;
+    }
+    navigate(-1);
+  };
+
+  const handleDiscardAndExit = () => {
+    setShowExitDialog(false);
+    navigate(-1);
   };
 
   const addTag = () => {
@@ -192,7 +233,7 @@ export default function CreatePage() {
     return Math.max(1, Math.ceil(wordCount / 200)); // 200 words per minute
   };
 
-  const handleSubmit = async (publish = false) => {
+  const handleSubmit = async (publish = false, options?: { skipNavigate?: boolean }) => {
     if (!user) return;
     if (!title.trim()) {
       toast({
@@ -287,7 +328,7 @@ export default function CreatePage() {
           : "Your page has been saved as a draft.",
       });
 
-      if (!editId) {
+      if (!editId && !options?.skipNavigate) {
         navigate(`/page/${data.id}`);
       }
     } catch (error: any) {
@@ -313,13 +354,29 @@ export default function CreatePage() {
           </div>
         </div>
       )}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>You have unsaved changes</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-muted-foreground">Do you want to save your work as a draft before leaving, discard changes, or stay on this page?</p>
+          </div>
+            <DialogFooter>
+              <div className="flex gap-2 justify-end">
+                <Button variant="destructive" onClick={handleDiscardAndExit}>Discard</Button>
+                <Button onClick={handleSaveDraftAndExit}>Save draft & leave</Button>
+              </div>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Back button (placed inline in header for previous behavior) */}
       {/* Header - positioned below navbar on desktop, below navbar+searchbar on mobile */}
       <div className="sticky top-28 sm:top-14 z-40 bg-background border-b shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="hidden sm:inline-flex">
+              <Button variant="ghost" size="sm" onClick={handleBackClick} className="hidden sm:inline-flex">
                 ← Back
               </Button>
               <div className="text-sm text-muted-foreground hidden sm:block">
