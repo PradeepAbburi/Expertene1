@@ -65,6 +65,8 @@ export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -99,11 +101,11 @@ export default function Auth() {
       });
 
       if (error) throw error;
-
-      toast({
-        title: "Success!",
-        description: "Account created successfully! You can now sign in.",
-      });
+      // Inform user that a verification link has been sent and show message on Sign In tab
+      const msg = `A verification link has been sent to ${email}. Please check your inbox to confirm your account.`;
+      setVerificationMessage(msg);
+      setActiveTab('signin');
+      toast({ title: 'Check your email', description: 'We sent a verification link. Please confirm to continue.' });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -255,19 +257,41 @@ export default function Auth() {
 
         {/* Right: Auth Forms */}
   <div className="p-6 lg:p-12 bg-black text-white flex items-center justify-center h-full rounded-none shadow-none relative z-10">
-          <div className="w-full max-w-md">
+          {/* checkbox-grid background pattern behind the form (non-interactive) */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 0,
+              pointerEvents: 'none',
+              opacity: 0.35,
+              backgroundRepeat: 'repeat',
+              backgroundPosition: '0 0',
+              backgroundSize: '40px 40px',
+              // SVG pattern for a small rounded checkbox square
+              backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect x='6' y='6' width='28' height='28' rx='4' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='2'/></svg>")}")`
+            }}
+            className="rounded-none"
+          />
+          <div className="w-full max-w-md relative z-10">
             <div className="mb-6">
               <h2 className="text-3xl lg:text-4xl font-bold gradient-primary bg-clip-text text-transparent mb-2">Welcome back</h2>
               <p className="text-muted-foreground">Sign in to your account or create a new one</p>
             </div>
 
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 h-11">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6 h-11">
                 <TabsTrigger value="signin" className="text-base font-medium">Sign In</TabsTrigger>
                 <TabsTrigger value="signup" className="text-base font-medium">Sign Up</TabsTrigger>
               </TabsList>
 
-                <TabsContent value="signin" className="mt-0">
+                  <TabsContent value="signin" className="mt-0">
+                    {verificationMessage && activeTab === 'signin' && (
+                      <div className="mb-4 p-3 rounded-md bg-primary/5 text-primary">
+                        {verificationMessage}
+                      </div>
+                    )}
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="identifier" className="text-sm font-medium">Username or Email</Label>
