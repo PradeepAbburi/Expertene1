@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // import Landing from "./pages/Landing"; // Unused
 import Index from "./pages/Index";
 import ExpNotebook from "./pages/ExpNotebook";
@@ -88,6 +88,8 @@ export default function App() {
             isLoggedIn ? (
               <Layout>
                 <Routes>
+                  {/* If a logged-in user somehow lands on /auth (e.g. after Supabase magic-link), redirect to feed */}
+                  <Route path="/auth" element={<Navigate to="/feed" replace />} />
                   <Route path="/feed" element={<Feed />} />
                   <Route path="/about" element={<About />}>
                     <Route index element={<AboutOverview />} />
