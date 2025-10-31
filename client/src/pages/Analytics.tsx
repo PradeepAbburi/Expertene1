@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Heart, Bookmark, TrendingUp, MessageCircle, Zap, Calendar, IndianRupee, X } from 'lucide-react';
+import { Eye, Heart, Bookmark, TrendingUp, MessageCircle, Zap, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,16 +14,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Article {
-  id: string | null | undefined;
-  title: string | null | undefined;
-  subtitle?: string | null | undefined;
-  cover_image_url?: string | null | undefined;
+  id: string;
+  title: string;
+  subtitle?: string;
+  cover_image_url?: string;
   reading_time?: number;
   likes_count: number;
   bookmarks_count: number;
   views_count: number;
   comments_count: number;
-  published_at: string | null | undefined;
+  published_at?: string;
   tags: string[];
 }
 
@@ -40,7 +40,6 @@ export default function Analytics() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeBoosts, setActiveBoosts] = useState<Record<string, ActiveBoost>>({});
-  const [tick, setTick] = useState<number>(Date.now()); // forces re-render for realtime impressions
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [boostDuration, setBoostDuration] = useState(7);
   const [dailyBudget, setDailyBudget] = useState(50);
@@ -73,9 +72,8 @@ export default function Analytics() {
     };
     window.addEventListener('storage', onStorage);
 
-    // tick interval for realtime UI updates and cleanup expired boosts
+    // interval for cleaning up expired boosts
     const interval = setInterval(() => {
-      setTick(Date.now());
       setActiveBoosts((prev) => {
         const now = Date.now();
         const next: Record<string, ActiveBoost> = {};
@@ -102,15 +100,33 @@ export default function Analytics() {
 
   const fetchArticles = async () => {
     try {
+      if (!user?.id) return;
+
       const { data, error } = await supabase
         .from('articles')
         .select('*')
-        .eq('author_id', user?.id)
+        .eq('author_id', user.id)
         .eq('is_published', true)
         .order('published_at', { ascending: false });
 
       if (error) throw error;
-      setArticles(data || []);
+
+      // Normalize data coming from Supabase so fields match the Article type
+      const normalized = (data || []).map((a: any) => ({
+        id: a.id ?? '',
+        title: a.title ?? '',
+        subtitle: a.subtitle ?? undefined,
+        cover_image_url: a.cover_image_url ?? undefined,
+        reading_time: a.reading_time ?? undefined,
+        likes_count: a.likes_count ?? 0,
+        bookmarks_count: a.bookmarks_count ?? 0,
+        views_count: a.views_count ?? 0,
+        comments_count: a.comments_count ?? 0,
+        published_at: a.published_at ?? undefined,
+        tags: (a.tags ?? []) as string[],
+      })) as Article[];
+
+      setArticles(normalized);
     } catch (error) {
       console.error('Error fetching articles:', error);
     } finally {
@@ -120,7 +136,7 @@ export default function Analytics() {
 
   // Subscribe to realtime updates on the user's articles to keep counts fresh
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     const channel = supabase
       .channel('realtime-articles')
       .on('postgres_changes', {
@@ -419,7 +435,7 @@ export default function Analytics() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium truncate text-sm">{selectedArticle.title}</h4>
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(selectedArticle.published_at))} ago
+                    {formatDistanceToNow(new Date(selectedArticle.published_at ?? Date.now()))} ago
                   </p>
                 </div>
               </div>
@@ -528,7 +544,7 @@ export default function Analytics() {
                     </p>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    Published {formatDistanceToNow(new Date(selectedArticle.published_at))} ago
+                    Published {formatDistanceToNow(new Date(selectedArticle.published_at ?? Date.now()))} ago
                   </p>
                 </div>
               </div>
